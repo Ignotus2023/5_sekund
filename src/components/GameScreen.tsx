@@ -142,7 +142,10 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
   }, [cancelSpeech]);
 
   const startTimer = () => {
-    if (!currentPrompt) return;
+    // Czytamy z refa, nie z domknięcia — auto-start wywoływany z callbacka
+    // przekazanego do speak() ma w closurze currentPrompt z renderu sprzed
+    // jego ustawienia, więc bezpośredni odczyt zwracałby null.
+    if (!currentPromptIdRef.current) return;
     cancelSpeech();
     setPhase('running');
     timer.start(turnSeconds);
