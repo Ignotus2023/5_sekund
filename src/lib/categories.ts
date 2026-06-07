@@ -3,6 +3,8 @@ export type CategoryKey =
   | 'zwierzeta'
   | 'codzienne'
   | 'kultura'
+  | 'muzyka'
+  | 'filmy'
   | 'ludzie'
   | 'przyroda'
   | 'szkola'
@@ -11,7 +13,8 @@ export type CategoryKey =
   | 'nauka'
   | 'historia'
   | 'polska'
-  | 'bajki';
+  | 'bajki'
+  | 'swieta';
 
 export interface CategoryMeta {
   key: CategoryKey;
@@ -24,6 +27,8 @@ export const CATEGORIES: CategoryMeta[] = [
   { key: 'zwierzeta', label: 'Zwierzęta',  emoji: '🐾' },
   { key: 'codzienne', label: 'Codzienne',  emoji: '🏠' },
   { key: 'kultura',   label: 'Kultura',    emoji: '🎭' },
+  { key: 'muzyka',    label: 'Muzyka',     emoji: '🎵' },
+  { key: 'filmy',     label: 'Filmy',      emoji: '🎬' },
   { key: 'ludzie',    label: 'Ludzie',     emoji: '👥' },
   { key: 'przyroda',  label: 'Przyroda',   emoji: '🌳' },
   { key: 'szkola',    label: 'Szkoła',     emoji: '📚' },
@@ -33,6 +38,7 @@ export const CATEGORIES: CategoryMeta[] = [
   { key: 'historia',  label: 'Historia',   emoji: '🏛️' },
   { key: 'polska',    label: 'Polska',     emoji: '🇵🇱' },
   { key: 'bajki',     label: 'Bajki',      emoji: '🧚' },
+  { key: 'swieta',    label: 'Święta',     emoji: '🎄' },
 ];
 
 export const CATEGORY_KEYS: CategoryKey[] = CATEGORIES.map((c) => c.key);
