@@ -333,14 +333,14 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
             )}
             {phase === 'judged' && (
               <>
+                <button className="btn-soft sm:col-span-1" onClick={advance}>
+                  ➡ Następny
+                </button>
                 <button className="btn-success sm:col-span-1" onClick={() => judge(true)}>
                   ✅ Zaliczone
                 </button>
                 <button className="btn-danger sm:col-span-1" onClick={() => judge(false)}>
                   ❌ Pudło
-                </button>
-                <button className="btn-soft sm:col-span-1" onClick={advance}>
-                  ➡ Następny
                 </button>
               </>
             )}
