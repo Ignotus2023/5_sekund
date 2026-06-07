@@ -2,7 +2,12 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+// Bazowa ścieżka — domyślnie '/' (dev/preview/własny serwer).
+// Na GitHub Pages: ustaw BASE_PATH=/5_sekund/ przy buildzie (robi to workflow w .github/workflows/deploy.yml).
+const base = process.env.BASE_PATH || '/';
+
 export default defineConfig({
+  base,
   plugins: [
     react(),
     VitePWA({
@@ -17,7 +22,8 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         lang: 'pl-PL',
-        start_url: '/',
+        start_url: base,
+        scope: base,
         icons: [
           {
             src: 'pwa-192x192.png',

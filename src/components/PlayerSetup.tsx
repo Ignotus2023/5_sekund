@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Player, GameSettings, Tier } from '../types';
 import { TIERS, TIER_LABEL, describeAge, tierOf } from '../lib/tier';
 import { nextColor, nextEmoji, uid } from '../lib/utils';
+import { CategorySelector } from './CategorySelector';
 
 interface Props {
   players: Player[];
@@ -234,6 +235,13 @@ export function PlayerSetup({ players, setPlayers, settings, setSettings, onStar
           />
           <span className="font-semibold">🔇 Wycisz dźwięki i lektora</span>
         </label>
+      </section>
+
+      <section className="card">
+        <CategorySelector
+          selected={settings.selectedCategories}
+          onChange={(cats) => setSettings({ ...settings, selectedCategories: cats })}
+        />
       </section>
 
       {players.length > 0 && (

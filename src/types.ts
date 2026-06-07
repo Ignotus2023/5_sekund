@@ -1,3 +1,5 @@
+import type { CategoryKey } from './lib/categories';
+
 export type Tier = '5-6' | '7-8' | '9-10' | '11-12' | '13-16' | 'dorosli';
 
 export type Age = number | 'dorosly';
@@ -15,7 +17,7 @@ export interface Prompt {
   id: string;
   text: string;
   tier: Tier;
-  category?: string;
+  category: CategoryKey;
 }
 
 export interface TimeSettings {
@@ -29,6 +31,7 @@ export interface GameSettings {
   winScore: number;     // 0 = swobodny tryb
   speechRate: number;   // 0.5 - 1.5
   muted: boolean;
+  selectedCategories: CategoryKey[]; // pusta lista = wszystkie
 }
 
 export type GameScreen = 'setup' | 'play' | 'result';

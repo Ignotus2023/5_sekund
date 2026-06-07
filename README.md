@@ -5,7 +5,8 @@ Rodzinna gra **„5 Sekund"** w wersji webowej (PWA). Gracz dostaje hasło typu 
 ## Najważniejsze funkcje
 
 - Konfiguracja graczy (imię + wiek 5–16 lub „Dorosły"), automatyczne kolory i awatary.
-- 6 poziomów trudności mapowanych z wieku, ok. 50 polskich haseł na poziom (banki w bundle, działają offline).
+- 6 poziomów trudności mapowanych z wieku, ok. 80 polskich haseł na poziom (łącznie ~480, banki w bundle, działają offline).
+- 11 kategorii haseł (jedzenie, zwierzęta, kultura, geografia, sport, nauka, historia itd.) z możliwością wyboru, których ma używać gra.
 - Bonus czasowy (handicap) konfigurowany na ekranie startowym dla każdego poziomu wieku osobno; można wyłączyć.
 - Odliczanie z dużym pierścieniem SVG, tykaniem co sekundę, sygnałem końca i wibracją telefonu.
 - Lektor (Web Speech API) `pl-PL` z regulacją tempa i fallbackiem, jeśli głos jest niedostępny.
@@ -26,9 +27,27 @@ npm run build     # zbuduj wersję produkcyjną do dist/
 npm run preview   # podgląd zbudowanej wersji
 ```
 
-## Wdrożenie statyczne
+## Wdrożenie online — GitHub Pages
 
-`npm run build` produkuje statyczny folder `dist/`. Wystarczy go opublikować pod dowolnym serwerem HTTP (nginx, Caddy, Vercel, Netlify, GitHub Pages itp.).
+Repo zawiera workflow `.github/workflows/deploy.yml`, który po pushu na branch **`main`** automatycznie buduje aplikację i publikuje folder `dist/` na GitHub Pages.
+
+Aby uruchomić deploy:
+
+1. W ustawieniach repo na GitHubie wejdź w **Settings → Pages** i w polu **Source** wybierz **GitHub Actions**.
+2. Zmerguj zmiany do brancha `main` (lub uruchom workflow ręcznie z zakładki **Actions → Deploy to GitHub Pages → Run workflow**).
+3. Po kilku minutach gra będzie dostępna pod adresem `https://<twoja-nazwa>.github.io/<nazwa-repo>/` (dla tego repo: `https://ignotus2023.github.io/5_sekund/`).
+
+Workflow ustawia automatycznie `BASE_PATH=/<nazwa-repo>/`, dzięki czemu wszystkie ścieżki (assety, manifest PWA, service worker) generują się poprawnie.
+
+## Wdrożenie statyczne (własny serwer, Vercel, Netlify…)
+
+`npm run build` produkuje statyczny folder `dist/`. Wystarczy go opublikować pod dowolnym serwerem HTTP (nginx, Caddy, Vercel, Netlify itp.).
+
+Jeśli serwujesz nie z roota domeny tylko z podkatalogu (np. `https://example.com/gry/5sekund/`), uruchom build z odpowiednią zmienną:
+
+```bash
+BASE_PATH=/gry/5sekund/ npm run build
+```
 
 Przykładowy blok nginx:
 
@@ -54,7 +73,9 @@ W `public/` znajdują się **placeholderowe** ikony `pwa-192x192.png` i `pwa-512
 
 ## Bank haseł
 
-Wszystkie hasła znajdują się w `src/data/prompts.ts`, podzielone na 6 poziomów (`5-6`, `7-8`, `9-10`, `11-12`, `13-16`, `dorosli`). Można je swobodnie rozszerzać — wystarczy dopisać kolejne wpisy do odpowiedniej tablicy. Mapowanie wiek → poziom jest scentralizowane w `src/lib/tier.ts` (funkcja `tierOf`).
+Wszystkie hasła znajdują się w `src/data/prompts.ts`, podzielone na 6 poziomów (`5-6`, `7-8`, `9-10`, `11-12`, `13-16`, `dorosli`). Każde hasło ma przypisaną **kategorię** (typowaną w `src/lib/categories.ts`). Można je swobodnie rozszerzać — wystarczy dopisać kolejne wpisy do odpowiedniej tablicy w formacie `['Wymień 3 …', 'kategoria']`. Mapowanie wiek → poziom jest scentralizowane w `src/lib/tier.ts` (funkcja `tierOf`).
+
+Na ekranie konfiguracji gracz/prowadzący może wybrać kategorie, z których aplikacja ma losować hasła. Jeśli wybór nie zawiera ani jednego hasła pasującego do wieku aktywnego gracza, aplikacja awaryjnie sięga po hasło spoza zaznaczonych — żeby gra nigdy się nie zacięła.
 
 ## Struktura projektu
 

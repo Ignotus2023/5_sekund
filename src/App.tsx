@@ -15,6 +15,7 @@ const DEFAULT_SETTINGS: GameSettings = {
   winScore: 10,
   speechRate: 0.95,
   muted: false,
+  selectedCategories: [], // [] = wszystkie kategorie
 };
 
 type Screen = 'setup' | 'play' | 'result';
@@ -25,14 +26,22 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('setup');
   const [winnerId, setWinnerId] = useState<string | null>(null);
 
-  // upewnij sie ze ustawienia maja wszystkie wymagane pola
+  // upewnij sie ze ustawienia z localStorage maja wszystkie wymagane pola
   useEffect(() => {
-    if (
+    const needsTime =
       !settings.time ||
       !settings.time.bonusByTier ||
-      typeof settings.time.baseSeconds !== 'number'
-    ) {
-      setSettings(DEFAULT_SETTINGS);
+      typeof settings.time.baseSeconds !== 'number';
+    const needsCategories = !Array.isArray(settings.selectedCategories);
+    if (needsTime || needsCategories) {
+      setSettings({
+        ...DEFAULT_SETTINGS,
+        ...settings,
+        time: needsTime ? DEFAULT_SETTINGS.time : settings.time,
+        selectedCategories: needsCategories
+          ? DEFAULT_SETTINGS.selectedCategories
+          : settings.selectedCategories,
+      });
     }
   }, [settings, setSettings]);
 

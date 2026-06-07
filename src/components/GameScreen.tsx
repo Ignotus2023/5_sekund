@@ -3,6 +3,7 @@ import type { GameSettings, Player, Prompt, Tier } from '../types';
 import { CountdownRing } from './CountdownRing';
 import { ScoreBoard } from './ScoreBoard';
 import { tierOf, TIER_LABEL } from '../lib/tier';
+import { CATEGORY_BY_KEY } from '../lib/categories';
 import { PROMPTS } from '../data/prompts';
 import { pickRandom } from '../lib/utils';
 import { useTimer } from '../hooks/useTimer';
@@ -45,7 +46,12 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
   );
 
   const drawPrompt = (tier: Tier): Prompt | null => {
-    const pool = PROMPTS[tier];
+    const fullPool = PROMPTS[tier];
+    const cats = settings.selectedCategories;
+    const inCategory =
+      cats.length === 0 ? fullPool : fullPool.filter((p) => cats.includes(p.category));
+    // Jesli wybrane kategorie nie maja zadnego hasla na tym poziomie - fallback do calej puli
+    const pool = inCategory.length > 0 ? inCategory : fullPool;
     const usedIds = used[tier] ?? [];
     let available = pool.filter((p) => !usedIds.includes(p.id));
     if (available.length === 0) {
@@ -186,9 +192,10 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
             <div className="text-3xl sm:text-5xl font-black leading-tight px-2">
               {currentPrompt.text}
             </div>
-            {currentPrompt.category && (
-              <div className="text-xs uppercase tracking-wide text-slate-400 mt-3">
-                {currentPrompt.category}
+            {currentPrompt.category && CATEGORY_BY_KEY[currentPrompt.category] && (
+              <div className="inline-flex items-center gap-1 mt-3 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wide">
+                <span>{CATEGORY_BY_KEY[currentPrompt.category].emoji}</span>
+                <span>{CATEGORY_BY_KEY[currentPrompt.category].label}</span>
               </div>
             )}
           </div>
