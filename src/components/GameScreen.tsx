@@ -21,16 +21,17 @@ interface Props {
   onExit: () => void;
 }
 
-interface UsedMap {
-  [tier: string]: string[];
+function normalizeText(text: string): string {
+  return text.toLowerCase().trim().replace(/\s+/g, ' ');
 }
 
 export function GameScreen({ players, settings, onScore, onFinish, onExit }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
-  // Pula użytych haseł żyje tylko w trakcie partii i nie ma UI, który by ją
-  // czytał — trzymamy w refie, dzięki czemu unikamy wyścigu (async updater
-  // czytałby starą wartość, gdy losowanie i zapis dzieją się w jednym evencie).
-  const usedRef = useRef<UsedMap>({});
+  // Śledzimy wykorzystane hasła po znormalizowanym tekście — globalnie, nie
+  // per-poziom. Dzięki temu jeśli to samo hasło istnieje w kilku poziomach
+  // (np. "Wymień 3 polskie miasta wojewódzkie" w 4 tierach), nie wyjdzie
+  // dwa razy w jednej partii dla różnych graczy.
+  const usedTextsRef = useRef<Set<string>>(new Set());
   const [currentPrompt, setCurrentPrompt] = useState<Prompt | null>(null);
   const [phase, setPhase] = useState<Phase>('handoff');
 
@@ -108,8 +109,9 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
     ],
   );
 
-  // Losowanie hasła z synchronicznym zapisem do refa. Set zamiast
-  // Array.includes daje O(1) lookup zamiast O(n).
+  // Losowanie hasła z synchronicznym zapisem do refa. Filtracja po
+  // znormalizowanym tekście (globalnie), żeby ten sam tekst nie wyszedł
+  // dwóm graczom z różnych poziomów wiekowych.
   const drawPrompt = useCallback(
     (tier: Tier): Prompt | null => {
       const fullPool = PROMPTS[tier];
@@ -120,19 +122,18 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
           : fullPool.filter((p) => cats.includes(p.category));
       const pool = inCategory.length > 0 ? inCategory : fullPool;
 
-      const usedSet = new Set(usedRef.current[tier] ?? []);
-      let available = pool.filter((p) => !usedSet.has(p.id));
-      let cleared = false;
+      const used = usedTextsRef.current;
+      let available = pool.filter((p) => !used.has(normalizeText(p.text)));
       if (available.length === 0) {
+        // Pula wyczerpana — zerujemy użyte teksty pochodzące z TEJ puli
+        // (nie ruszamy używanych z innych poziomów/kategorii, żeby nie
+        // wystrzeliły one ponownie dla innego gracza).
+        pool.forEach((p) => used.delete(normalizeText(p.text)));
         available = pool;
-        cleared = true;
       }
       const picked = pickRandom(available);
       if (!picked) return null;
-      usedRef.current = {
-        ...usedRef.current,
-        [tier]: cleared ? [picked.id] : [...(usedRef.current[tier] ?? []), picked.id],
-      };
+      used.add(normalizeText(picked.text));
       return picked;
     },
     [settings.selectedCategories],

@@ -5,7 +5,6 @@ type RawPrompt = [string, CategoryKey];
 
 const RAW: Record<Tier, RawPrompt[]> = {
   '5-6': [
-    // ── jedzenie ──
     ['Wymień 3 owoce', 'jedzenie'],
     ['Wymień 3 słodycze', 'jedzenie'],
     ['Wymień 3 napoje', 'jedzenie'],
@@ -31,8 +30,6 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 rzeczy słone', 'jedzenie'],
     ['Wymień 3 ulubione kanapki', 'jedzenie'],
     ['Wymień 3 rodzaje zup, które znasz', 'jedzenie'],
-
-    // ── zwierzęta ──
     ['Wymień 3 zwierzęta domowe', 'zwierzeta'],
     ['Wymień 3 zwierzęta z gospodarstwa', 'zwierzeta'],
     ['Wymień 3 zwierzęta w lesie', 'zwierzeta'],
@@ -62,8 +59,6 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 zwierzęta z piórami', 'zwierzeta'],
     ['Wymień 3 zwierzęta, które mieszkają w jeziorze', 'zwierzeta'],
     ['Wymień 3 zwierzęta z gospodarstwa, które dają jajka', 'zwierzeta'],
-
-    // ── codzienne ──
     ['Wymień 3 kolory', 'codzienne'],
     ['Wymień 3 zabawki', 'codzienne'],
     ['Wymień 3 części ciała', 'codzienne'],
@@ -104,40 +99,27 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 rzeczy zrobione z papieru', 'codzienne'],
     ['Wymień 3 ulubione pluszaki', 'codzienne'],
     ['Wymień 3 rzeczy w lunaparku', 'codzienne'],
-
-    // ── ludzie ──
     ['Wymień 3 imiona dziewczynek', 'ludzie'],
     ['Wymień 3 imiona chłopców', 'ludzie'],
     ['Wymień 3 osoby w rodzinie', 'ludzie'],
     ['Wymień 3 osoby pracujące w przedszkolu', 'ludzie'],
     ['Wymień 3 zawody, gdzie nosi się mundur', 'ludzie'],
-
-    // ── szkoła ──
     ['Wymień 3 rzeczy w przedszkolu', 'szkola'],
-    ['Wymień 3 rzeczy w piórniku', 'szkola'],
     ['Wymień 3 figury, które znasz', 'szkola'],
     ['Wymień 3 rzeczy w plecaku do przedszkola', 'szkola'],
     ['Wymień 3 rzeczy do mycia zębów', 'codzienne'],
-
-    // ── przyroda ──
     ['Wymień 3 kwiaty', 'przyroda'],
     ['Wymień 3 rzeczy w ogrodzie', 'przyroda'],
     ['Wymień 3 rzeczy, które rosną w ogrodzie', 'przyroda'],
     ['Wymień 3 rzeczy zimowe', 'przyroda'],
     ['Wymień 3 rzeczy letnie', 'przyroda'],
     ['Wymień 3 owoce leśne', 'przyroda'],
-
-    // ── kultura ──
     ['Wymień 3 instrumenty muzyczne', 'kultura'],
-
-    // ── muzyka ──
     ['Wymień 3 piosenki, które znasz', 'muzyka'],
     ['Wymień 3 ulubione kołysanki', 'muzyka'],
     ['Wymień 3 piosenki o zwierzętach', 'muzyka'],
     ['Wymień 3 piosenki śpiewane na urodzinach', 'muzyka'],
     ['Wymień 3 dźwięki, które słyszysz w domu', 'muzyka'],
-
-    // ── bajki ──
     ['Wymień 3 bajki', 'bajki'],
     ['Wymień 3 kreskówki', 'bajki'],
     ['Wymień 3 zwierzęta z bajek', 'bajki'],
@@ -156,28 +138,18 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 postacie z Auta (Cars)', 'bajki'],
     ['Wymień 3 księcia lub księżniczki z bajek', 'bajki'],
     ['Wymień 3 ulubione bajki na YouTube', 'bajki'],
-
-    // ── święta ──
     ['Wymień 3 rzeczy na choince', 'swieta'],
     ['Wymień 3 świąteczne potrawy', 'swieta'],
     ['Wymień 3 prezenty wymarzone od Mikołaja', 'swieta'],
     ['Wymień 3 kolory pisanek wielkanocnych', 'swieta'],
     ['Wymień 3 rzeczy w koszyczku wielkanocnym', 'swieta'],
-    ['Wymień 3 polskie kolędy', 'swieta'],
     ['Wymień 3 rzeczy, które robisz w święta', 'swieta'],
-
-    // ── polska ──
-    ['Wymień 3 polskie miasta', 'polska'],
-    ['Wymień 3 polskie potrawy', 'polska'],
-    ['Wymień 3 polskie rzeki', 'polska'],
     ['Wymień 3 polskie ptaki', 'polska'],
     ['Wymień 3 polskie owoce z drzew', 'polska'],
     ['Wymień 3 polskie zwierzęta z lasu', 'polska'],
   ],
 
   '7-8': [
-    // ── jedzenie ──
-    ['Wymień 3 warzywa', 'jedzenie'],
     ['Wymień 3 rodzaje pieczywa', 'jedzenie'],
     ['Wymień 3 rodzaje serów', 'jedzenie'],
     ['Wymień 3 zupy', 'jedzenie'],
@@ -192,10 +164,7 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 dodatki do pizzy', 'jedzenie'],
     ['Wymień 3 sosy do makaronu', 'jedzenie'],
     ['Wymień 3 owoce do soku', 'jedzenie'],
-
-    // ── zwierzęta ──
     ['Wymień 3 dzikie zwierzęta', 'zwierzeta'],
-    ['Wymień 3 owady', 'zwierzeta'],
     ['Wymień 3 zwierzęta egzotyczne', 'zwierzeta'],
     ['Wymień 3 zwierzęta morskie', 'zwierzeta'],
     ['Wymień 3 ptaki, które znasz', 'zwierzeta'],
@@ -204,14 +173,10 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 zwierzęta z Australii', 'zwierzeta'],
     ['Wymień 3 zwierzęta wymarłe', 'zwierzeta'],
     ['Wymień 3 zwierzęta w stawie', 'zwierzeta'],
-    ['Wymień 3 zwierzęta nocne', 'zwierzeta'],
     ['Wymień 3 zwierzęta na sawannie', 'zwierzeta'],
     ['Wymień 3 zwierzęta tropikalne', 'zwierzeta'],
-    ['Wymień 3 zwierzęta z dżungli', 'zwierzeta'],
     ['Wymień 3 zwierzęta z jaskini', 'zwierzeta'],
     ['Wymień 3 zwierzęta, które żyją krócej niż rok', 'zwierzeta'],
-
-    // ── codzienne ──
     ['Wymień 3 środki transportu', 'codzienne'],
     ['Wymień 3 rzeczy w lodówce', 'codzienne'],
     ['Wymień 3 rzeczy zrobione z metalu', 'codzienne'],
@@ -242,8 +207,6 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 rzeczy w piwnicy', 'codzienne'],
     ['Wymień 3 rzeczy w samolocie', 'codzienne'],
     ['Wymień 3 popularne aplikacje na telefonie', 'codzienne'],
-
-    // ── szkoła ──
     ['Wymień 3 dni tygodnia', 'szkola'],
     ['Wymień 3 figury geometryczne', 'szkola'],
     ['Wymień 3 rzeczy w plecaku do szkoły', 'szkola'],
@@ -253,23 +216,16 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 dni, w które chodzi się do szkoły', 'szkola'],
     ['Wymień 3 elementy pracy nauczyciela', 'szkola'],
     ['Wymień 3 przedmioty w szkole', 'szkola'],
-
-    // ── przyroda ──
     ['Wymień 3 pory roku', 'przyroda'],
     ['Wymień 3 znane drzewa', 'przyroda'],
     ['Wymień 3 elementy pogody', 'przyroda'],
     ['Wymień 3 rzeczy w lesie', 'przyroda'],
     ['Wymień 3 rośliny doniczkowe', 'przyroda'],
     ['Wymień 3 grzyby jadalne', 'przyroda'],
-
-    // ── ludzie ──
     ['Wymień 3 zawody', 'ludzie'],
     ['Wymień 3 zawody związane z wodą', 'ludzie'],
     ['Wymień 3 zawody związane ze zwierzętami', 'ludzie'],
     ['Wymień 3 zawody, gdzie pomaga się ludziom', 'ludzie'],
-    ['Wymień 3 imiona kończące się na "a"', 'ludzie'],
-
-    // ── sport ──
     ['Wymień 3 sporty', 'sport'],
     ['Wymień 3 sporty letnie', 'sport'],
     ['Wymień 3 sporty zimowe', 'sport'],
@@ -278,22 +234,15 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 sporty na świeżym powietrzu', 'sport'],
     ['Wymień 3 sporty halowe', 'sport'],
     ['Wymień 3 sporty z rakietą', 'sport'],
-
-    // ── geografia ──
     ['Wymień 3 morza świata', 'geografia'],
     ['Wymień 3 kontynenty', 'geografia'],
     ['Wymień 3 oceany', 'geografia'],
     ['Wymień 3 znane stolice europejskie', 'geografia'],
     ['Wymień 3 znane wieże świata', 'geografia'],
-    ['Wymień 3 znane wyspy', 'geografia'],
     ['Wymień 3 kraje, gdzie mówi się po angielsku', 'geografia'],
-
-    // ── nauka ──
     ['Wymień 3 zjawiska w przyrodzie', 'nauka'],
     ['Wymień 3 znane planety', 'nauka'],
     ['Wymień 3 stany skupienia wody', 'nauka'],
-
-    // ── bajki ──
     ['Wymień 3 znane postacie z bajek', 'bajki'],
     ['Wymień 3 światowe znane bajki', 'bajki'],
     ['Wymień 3 sławne baśnie', 'bajki'],
@@ -304,68 +253,44 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 polskie dobranocki', 'bajki'],
     ['Wymień 3 postacie z Minionków', 'bajki'],
     ['Wymień 3 postacie z Bing', 'bajki'],
-
-    // ── filmy ──
     ['Wymień 3 ulubione filmy', 'filmy'],
     ['Wymień 3 polskie filmy dla dzieci', 'filmy'],
     ['Wymień 3 filmy o zwierzętach', 'filmy'],
     ['Wymień 3 znane filmy familijne', 'filmy'],
-
-    // ── muzyka ──
     ['Wymień 3 instrumenty strunowe', 'muzyka'],
     ['Wymień 3 instrumenty dęte', 'muzyka'],
     ['Wymień 3 polskie kolędy', 'muzyka'],
     ['Wymień 3 znane piosenki dla dzieci', 'muzyka'],
     ['Wymień 3 gatunki muzyki, które słuchasz', 'muzyka'],
-
-    // ── święta ──
-    ['Wymień 3 polskie potrawy wigilijne', 'swieta'],
     ['Wymień 3 rzeczy na stole wielkanocnym', 'swieta'],
     ['Wymień 3 znane święta państwowe w Polsce', 'swieta'],
     ['Wymień 3 rzeczy na święta Bożego Narodzenia', 'swieta'],
     ['Wymień 3 zwyczaje na Andrzejki', 'swieta'],
-
-    // ── polska ──
     ['Wymień 3 polskie miasta', 'polska'],
     ['Wymień 3 góry w Polsce', 'polska'],
     ['Wymień 3 polskie potrawy', 'polska'],
     ['Wymień 3 polskie zwierzęta leśne', 'polska'],
     ['Wymień 3 polskie rzeki', 'polska'],
     ['Wymień 3 polskie miasta nad morzem', 'polska'],
-    ['Wymień 3 polskie tradycyjne potrawy', 'polska'],
     ['Wymień 3 znane polskie góry lub szczyty', 'polska'],
     ['Wymień 3 polskie znane miasta turystyczne', 'polska'],
-    ['Wymień 3 polskie owoce z drzew', 'polska'],
-    ['Wymień 3 polskie symbole narodowe', 'polska'],
     ['Wymień 3 polskie zupy', 'polska'],
     ['Wymień 3 polskie znane jeziora', 'polska'],
-    ['Wymień 3 polskie miasta wojewódzkie', 'polska'],
     ['Wymień 3 polskie marki słodyczy', 'polska'],
     ['Wymień 3 polskie pisarki lub pisarzy dla dzieci', 'polska'],
     ['Wymień 3 polskie góry oprócz Tatr', 'polska'],
-
-    // ── historia ──
     ['Wymień 3 znane zamki', 'historia'],
-
-    // ── kultura ──
     ['Wymień 3 znane gry planszowe', 'kultura'],
   ],
 
   '9-10': [
-    // ── geografia ──
     ['Wymień 3 kraje w Europie', 'geografia'],
-    ['Wymień 3 stolice europejskie', 'geografia'],
     ['Wymień 3 kraje azjatyckie', 'geografia'],
     ['Wymień 3 narody świata', 'geografia'],
     ['Wymień 3 mosty w Polsce lub na świecie', 'geografia'],
-    ['Wymień 3 znane wulkany', 'geografia'],
     ['Wymień 3 wyspy europejskie', 'geografia'],
     ['Wymień 3 kraje, przez które płynie Dunaj', 'geografia'],
     ['Wymień 3 znane wodospady', 'geografia'],
-    ['Wymień 3 polskie znane miasta historyczne', 'polska'],
-
-    // ── polska ──
-    ['Wymień 3 polskie miasta', 'polska'],
     ['Wymień 3 rzeki w Polsce', 'polska'],
     ['Wymień 3 polskie góry', 'polska'],
     ['Wymień 3 znane zamki w Polsce', 'polska'],
@@ -387,7 +312,6 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 polskie miasta wojewódzkie', 'polska'],
     ['Wymień 3 sławnych polskich pisarzy', 'polska'],
     ['Wymień 3 polskich królów lub książąt', 'polska'],
-    ['Wymień 3 polskie zabytki UNESCO', 'polska'],
     ['Wymień 3 polskie zespoły muzyczne', 'polska'],
     ['Wymień 3 polskie znane marki', 'polska'],
     ['Wymień 3 polskich piłkarzy', 'polska'],
@@ -403,9 +327,6 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 polskie znane parki rozrywki', 'polska'],
     ['Wymień 3 polskie marki samochodów z PRL', 'polska'],
     ['Wymień 3 polskie sportowe sukcesy', 'polska'],
-
-    // ── bajki ──
-    ['Wymień 3 superbohaterów', 'bajki'],
     ['Wymień 3 znane filmy animowane', 'bajki'],
     ['Wymień 3 znane bajki Disneya', 'bajki'],
     ['Wymień 3 polskie kreskówki', 'bajki'],
@@ -413,47 +334,33 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 polskie znane dobranocki', 'bajki'],
     ['Wymień 3 postacie z Avengers', 'bajki'],
     ['Wymień 3 postacie z Shreka', 'bajki'],
-    ['Wymień 3 postacie z Krainy Lodu', 'bajki'],
     ['Wymień 3 postacie z Minecrafta', 'bajki'],
     ['Wymień 3 superbohaterów DC', 'bajki'],
-
-    // ── filmy ──
     ['Wymień 3 znane filmy z Harry’ego Pottera', 'filmy'],
     ['Wymień 3 polskie filmy familijne', 'filmy'],
     ['Wymień 3 znane filmy Marvela', 'filmy'],
     ['Wymień 3 polskie seriale dla dzieci', 'filmy'],
     ['Wymień 3 znane filmy z dinozaurami', 'filmy'],
-
-    // ── muzyka ──
-    ['Wymień 3 polskie zespoły rockowe', 'muzyka'],
     ['Wymień 3 polskie piosenkarki', 'muzyka'],
     ['Wymień 3 instrumenty perkusyjne', 'muzyka'],
     ['Wymień 3 znane piosenki Disneya', 'muzyka'],
     ['Wymień 3 gatunki muzyki tanecznej', 'muzyka'],
-
-    // ── święta ──
     ['Wymień 3 polskie zwyczaje weselne', 'swieta'],
     ['Wymień 3 elementy wigilijnej kolacji', 'swieta'],
     ['Wymień 3 polskie święta państwowe', 'swieta'],
     ['Wymień 3 zwyczaje noworoczne', 'swieta'],
-
-    // ── codzienne ──
     ['Wymień 3 rodzaje pizzy', 'jedzenie'],
-    ['Wymień 3 owoce egzotyczne', 'jedzenie'],
     ['Wymień 3 rzeczy w plecaku turystycznym', 'codzienne'],
     ['Wymień 3 rzeczy w lodówce zdrowego człowieka', 'codzienne'],
     ['Wymień 3 narzędzia kuchenne', 'codzienne'],
     ['Wymień 3 rzeczy w bibliotece', 'codzienne'],
     ['Wymień 3 rzeczy w gabinecie weterynarza', 'codzienne'],
     ['Wymień 3 rzeczy w pracowni komputerowej', 'codzienne'],
-    ['Wymień 3 popularne aplikacje na telefonie', 'codzienne'],
     ['Wymień 3 sposoby na nudę', 'codzienne'],
     ['Wymień 3 rzeczy, które masz na biurku', 'codzienne'],
     ['Wymień 3 rzeczy w pokoju nastolatka', 'codzienne'],
     ['Wymień 3 rodzaje pociągów', 'codzienne'],
     ['Wymień 3 nadzienia do pierogów', 'jedzenie'],
-
-    // ── nauka ──
     ['Wymień 3 planety Układu Słonecznego', 'nauka'],
     ['Wymień 3 dinozaury', 'nauka'],
     ['Wymień 3 metale', 'nauka'],
@@ -469,27 +376,18 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 znane dinozaury drapieżne', 'nauka'],
     ['Wymień 3 wynalazki ułatwiające życie', 'nauka'],
     ['Wymień 3 znane symbole pierwiastków', 'nauka'],
-
-    // ── kultura ──
-    ['Wymień 3 instrumenty muzyczne', 'kultura'],
     ['Wymień 3 rodzaje muzyki', 'kultura'],
     ['Wymień 3 gry planszowe', 'kultura'],
     ['Wymień 3 znane książki dla dzieci', 'kultura'],
-    ['Wymień 3 sławnych malarzy', 'kultura'],
     ['Wymień 3 rzeczy w muzeum', 'kultura'],
     ['Wymień 3 znane dzieła literatury dziecięcej', 'kultura'],
     ['Wymień 3 figury w szachach', 'kultura'],
     ['Wymień 3 znane gry planszowe rodzinne', 'kultura'],
     ['Wymień 3 znane gry komputerowe dla dzieci', 'kultura'],
-
-    // ── przyroda ──
     ['Wymień 3 gatunki drzew liściastych', 'przyroda'],
     ['Wymień 3 gatunki drzew iglastych', 'przyroda'],
     ['Wymień 3 rzeczy w lesie iglastym', 'przyroda'],
     ['Wymień 3 elementy ekosystemu', 'przyroda'],
-
-    // ── sport ──
-    ['Wymień 3 sporty zimowe', 'sport'],
     ['Wymień 3 sporty olimpijskie', 'sport'],
     ['Wymień 3 znane stadiony', 'sport'],
     ['Wymień 3 sporty drużynowe', 'sport'],
@@ -497,12 +395,8 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 znane mistrzostwa świata', 'sport'],
     ['Wymień 3 sporty z koniem', 'sport'],
     ['Wymień 3 sporty na rolkach lub deskach', 'sport'],
-
-    // ── historia ──
     ['Wymień 3 znane piramidy lub starożytne budowle', 'historia'],
     ['Wymień 3 sławnych podróżników', 'historia'],
-
-    // ── zwierzęta ──
     ['Wymień 3 gatunki ptaków', 'zwierzeta'],
     ['Wymień 3 zwierzęta wodne', 'zwierzeta'],
     ['Wymień 3 zwierzęta z Afryki', 'zwierzeta'],
@@ -515,16 +409,11 @@ const RAW: Record<Tier, RawPrompt[]> = {
   ],
 
   '11-12': [
-    // ── polska ──
     ['Wymień 3 polskich pisarzy', 'polska'],
     ['Wymień 3 polskich królów', 'polska'],
     ['Wymień 3 znane wynalazki polskie', 'polska'],
-    ['Wymień 3 polskie góry', 'polska'],
-    ['Wymień 3 polskie miasta wojewódzkie', 'polska'],
-    ['Wymień 3 polskich sportowców', 'polska'],
     ['Wymień 3 polskie filmy', 'polska'],
     ['Wymień 3 polskie zabytki UNESCO', 'polska'],
-    ['Wymień 3 polskich noblistów', 'polska'],
     ['Wymień 3 polskie potrawy regionalne', 'polska'],
     ['Wymień 3 polskie znane zespoły muzyczne', 'polska'],
     ['Wymień 3 znane dzieła literatury polskiej', 'polska'],
@@ -542,7 +431,6 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 polskich olimpijczyków', 'polska'],
     ['Wymień 3 polskie filmy dla młodzieży', 'polska'],
     ['Wymień 3 polskich raperów lub muzyków pop', 'polska'],
-    ['Wymień 3 polskie miasta nad Wisłą', 'polska'],
     ['Wymień 3 polskie regionalne stroje ludowe', 'polska'],
     ['Wymień 3 polskie postacie z bajek dobranockowych', 'polska'],
     ['Wymień 3 polskich poetów', 'polska'],
@@ -556,8 +444,6 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 polskie marki znane na świecie', 'polska'],
     ['Wymień 3 polskie wynalazki kulinarne', 'polska'],
     ['Wymień 3 polskie seriale ostatnich lat', 'polska'],
-
-    // ── kultura ──
     ['Wymień 3 gry komputerowe', 'kultura'],
     ['Wymień 3 gatunki muzyczne', 'kultura'],
     ['Wymień 3 rodzaje literackie', 'kultura'],
@@ -566,33 +452,23 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 figury stylistyczne', 'kultura'],
     ['Wymień 3 epoki historyczne', 'historia'],
     ['Wymień 3 rodzaje literatury fantastycznej', 'kultura'],
-    ['Wymień 3 znane musicale', 'kultura'],
     ['Wymień 3 znane orkiestry', 'kultura'],
     ['Wymień 3 znane gry mobilne', 'kultura'],
     ['Wymień 3 światowych pisarzy XXI wieku', 'kultura'],
-
-    // ── filmy ──
     ['Wymień 3 polskie filmy ostatniej dekady', 'filmy'],
     ['Wymień 3 polskich aktorów młodego pokolenia', 'filmy'],
     ['Wymień 3 znane seriale Netflixa', 'filmy'],
     ['Wymień 3 filmy o czarodziejach', 'filmy'],
     ['Wymień 3 znane filmy o kosmosie', 'filmy'],
     ['Wymień 3 znane filmy o superbohaterach', 'filmy'],
-
-    // ── muzyka ──
     ['Wymień 3 polskie zespoły hip-hopowe', 'muzyka'],
-    ['Wymień 3 sławnych dyrygentów', 'muzyka'],
     ['Wymień 3 instrumenty w orkiestrze symfonicznej', 'muzyka'],
     ['Wymień 3 znane festiwale muzyczne w Polsce', 'muzyka'],
     ['Wymień 3 polskie znane piosenki ostatnich lat', 'muzyka'],
-
-    // ── święta ──
     ['Wymień 3 zwyczaje andrzejkowe', 'swieta'],
     ['Wymień 3 zwyczaje na Tłusty Czwartek', 'swieta'],
     ['Wymień 3 zwyczaje na Sylwestra', 'swieta'],
     ['Wymień 3 zwyczaje wielkanocne', 'swieta'],
-
-    // ── geografia ──
     ['Wymień 3 stolice europejskie', 'geografia'],
     ['Wymień 3 morza', 'geografia'],
     ['Wymień 3 znane budowle na świecie', 'geografia'],
@@ -610,8 +486,6 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 rzeki Europy', 'geografia'],
     ['Wymień 3 stolice państw nadbałtyckich', 'geografia'],
     ['Wymień 3 znane miasta we Włoszech', 'geografia'],
-
-    // ── nauka ──
     ['Wymień 3 wynalazki', 'nauka'],
     ['Wymień 3 źródła energii odnawialnej', 'nauka'],
     ['Wymień 3 pierwiastki chemiczne', 'nauka'],
@@ -624,31 +498,22 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 zjawiska atmosferyczne', 'nauka'],
     ['Wymień 3 części układu pokarmowego', 'nauka'],
     ['Wymień 3 rzeczy potrzebne w laboratorium', 'nauka'],
-    ['Wymień 3 znane teorie naukowe', 'nauka'],
     ['Wymień 3 elementy obwodu elektrycznego', 'nauka'],
     ['Wymień 3 ciecze codziennego użytku', 'nauka'],
     ['Wymień 3 elementy strony internetowej', 'nauka'],
     ['Wymień 3 rodzaje galaktyk lub mgławic', 'nauka'],
     ['Wymień 3 figury w geometrii płaskiej', 'nauka'],
     ['Wymień 3 polskich naukowców', 'nauka'],
-
-    // ── codzienne ──
     ['Wymień 3 marki samochodów', 'codzienne'],
     ['Wymień 3 wynalazki ułatwiające codzienne życie', 'codzienne'],
     ['Wymień 3 narzędzia stolarskie', 'codzienne'],
     ['Wymień 3 rzeczy, które masz w plecaku', 'codzienne'],
     ['Wymień 3 popularne aplikacje społecznościowe', 'codzienne'],
-
-    // ── sport ──
-    ['Wymień 3 polskich sportowców', 'sport'],
     ['Wymień 3 rodzaje sportów drużynowych', 'sport'],
     ['Wymień 3 rodzaje sztuk walki', 'sport'],
     ['Wymień 3 słynne mecze w historii sportu', 'sport'],
     ['Wymień 3 dyscypliny olimpijskie', 'sport'],
-    ['Wymień 3 sporty wodne', 'sport'],
     ['Wymień 3 sporty motorowe', 'sport'],
-
-    // ── historia ──
     ['Wymień 3 znane wynalazki Edisona lub Tesli', 'historia'],
     ['Wymień 3 starożytne cywilizacje', 'historia'],
     ['Wymień 3 znane budowle starożytne', 'historia'],
@@ -656,53 +521,36 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 wielkie cywilizacje starożytności', 'historia'],
     ['Wymień 3 znane wynalazki średniowiecza', 'historia'],
     ['Wymień 3 znane bitwy z udziałem Polski', 'historia'],
-
-    // ── przyroda ──
     ['Wymień 3 zwierzęta zagrożone wyginięciem', 'przyroda'],
     ['Wymień 3 zwierzęta endemiczne', 'przyroda'],
-
-    // ── zwierzęta ──
     ['Wymień 3 zwierzęta drapieżne', 'zwierzeta'],
     ['Wymień 3 zwierzęta z gorących krajów', 'zwierzeta'],
-
-    // ── bajki ──
-    ['Wymień 3 postacie z Władcy Pierścieni', 'bajki'],
-    ['Wymień 3 postacie z Marvela', 'bajki'],
     ['Wymień 3 polskie kultowe bajki', 'bajki'],
     ['Wymień 3 znane bajki Studio Ghibli', 'bajki'],
     ['Wymień 3 postacie ze SpongeBoba', 'bajki'],
   ],
 
   '13-16': [
-    // ── polska ──
     ['Wymień 3 polskich noblistów', 'polska'],
     ['Wymień 3 bitwy z historii Polski', 'polska'],
-    ['Wymień 3 polskie zespoły muzyczne', 'polska'],
-    ['Wymień 3 polskich reżyserów', 'polska'],
     ['Wymień 3 polskie powieści', 'polska'],
-    ['Wymień 3 polskich poetów', 'polska'],
     ['Wymień 3 znane uniwersytety w Polsce', 'polska'],
     ['Wymień 3 polskie startupy lub firmy IT', 'polska'],
     ['Wymień 3 sławnych polskich piłkarzy', 'polska'],
     ['Wymień 3 sławnych polskich siatkarzy lub siatkarki', 'polska'],
     ['Wymień 3 polskich himalaistów', 'polska'],
-    ['Wymień 3 polskie miasta nad morzem', 'polska'],
     ['Wymień 3 sławnych polskich naukowców', 'polska'],
     ['Wymień 3 dzieła Mickiewicza lub Słowackiego', 'polska'],
     ['Wymień 3 polskie portale internetowe', 'polska'],
     ['Wymień 3 organy administracji państwowej w Polsce', 'polska'],
     ['Wymień 3 współczesne polskie zespoły muzyczne', 'polska'],
-    ['Wymień 3 polskie wybitne sportowczynie', 'polska'],
     ['Wymień 3 polskie postacie literackie', 'polska'],
-    ['Wymień 3 znane teatry w Polsce', 'polska'],
     ['Wymień 3 polskie marki popularne wśród nastolatków', 'polska'],
     ['Wymień 3 wybitnych polskich olimpijczyków', 'polska'],
     ['Wymień 3 polskie znane wydarzenia historyczne XX wieku', 'polska'],
     ['Wymień 3 wybitnych polskich aktorów lub aktorki', 'polska'],
     ['Wymień 3 polskie zwyczaje świąteczne', 'polska'],
-    ['Wymień 3 polskie znane miasta historyczne', 'polska'],
     ['Wymień 3 polskich e-sportowców lub streamerów', 'polska'],
-    ['Wymień 3 polskie miasta wojewódzkie', 'polska'],
     ['Wymień 3 polskie kultowe seriale', 'polska'],
     ['Wymień 3 polskie znane podcasty lub kanały YouTube', 'polska'],
     ['Wymień 3 polskie postacie z gier komputerowych', 'polska'],
@@ -718,8 +566,6 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 polskich znanych raperek lub raperów', 'polska'],
     ['Wymień 3 polskie znane influencerów', 'polska'],
     ['Wymień 3 polskie znane akademie lub uczelnie artystyczne', 'polska'],
-
-    // ── filmy ──
     ['Wymień 3 gatunki filmowe', 'filmy'],
     ['Wymień 3 znane gry wideo', 'filmy'],
     ['Wymień 3 trylogie filmowe', 'filmy'],
@@ -730,21 +576,13 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 znane miniserie HBO', 'filmy'],
     ['Wymień 3 znane filmy Disney w wersji aktorskiej', 'filmy'],
     ['Wymień 3 znane seriale komediowe', 'filmy'],
-
-    // ── muzyka ──
     ['Wymień 3 polskich raperów', 'muzyka'],
     ['Wymień 3 znane piosenkarki światowe', 'muzyka'],
     ['Wymień 3 znane utwory K-pop', 'muzyka'],
     ['Wymień 3 znane festiwale muzyczne na świecie', 'muzyka'],
     ['Wymień 3 polskich wykonawców rocka', 'muzyka'],
-
-    // ── święta ──
     ['Wymień 3 zwyczaje sylwestrowe', 'swieta'],
     ['Wymień 3 zwyczaje walentynkowe', 'swieta'],
-    ['Wymień 3 polskie zwyczaje weselne', 'swieta'],
-
-    // ── bajki ──
-    ['Wymień 3 postacie z Harry’ego Pottera', 'bajki'],
     ['Wymień 3 postacie z Władcy Pierścieni', 'bajki'],
     ['Wymień 3 postacie z Marvela', 'bajki'],
     ['Wymień 3 postacie z DC Comics', 'bajki'],
@@ -752,8 +590,6 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 bajki Disneya z lat 90.', 'bajki'],
     ['Wymień 3 polskie bajki kultowe', 'bajki'],
     ['Wymień 3 znane bajki ze świata fantasy', 'bajki'],
-
-    // ── kultura ──
     ['Wymień 3 epoki literackie', 'kultura'],
     ['Wymień 3 sławnych filozofów', 'kultura'],
     ['Wymień 3 sławnych pisarzy światowych', 'kultura'],
@@ -762,7 +598,6 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 znane symfonie lub koncerty klasyczne', 'kultura'],
     ['Wymień 3 rodzaje sztuk wizualnych', 'kultura'],
     ['Wymień 3 znane książki YA (młodzieżowe)', 'kultura'],
-    ['Wymień 3 znane gry mobilne', 'kultura'],
     ['Wymień 3 prądy filozoficzne', 'kultura'],
     ['Wymień 3 znane festiwale muzyczne', 'kultura'],
     ['Wymień 3 sławne książki XX wieku', 'kultura'],
@@ -771,10 +606,7 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 znane gry strategiczne', 'kultura'],
     ['Wymień 3 prądy w sztuce', 'kultura'],
     ['Wymień 3 popularne mity miejskie', 'kultura'],
-
-    // ── nauka ──
     ['Wymień 3 układy w organizmie człowieka', 'nauka'],
-    ['Wymień 3 rodzaje skał', 'nauka'],
     ['Wymień 3 funkcje matematyczne', 'nauka'],
     ['Wymień 3 rodzaje wiązań chemicznych', 'nauka'],
     ['Wymień 3 znane teorie naukowe', 'nauka'],
@@ -789,45 +621,31 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 sławne odkrycia naukowe', 'nauka'],
     ['Wymień 3 prawa fizyki', 'nauka'],
     ['Wymień 3 znane przedmioty na maturze', 'nauka'],
-
-    // ── geografia ──
     ['Wymień 3 stolice azjatyckie', 'geografia'],
     ['Wymień 3 europejskie pasma górskie', 'geografia'],
     ['Wymień 3 najwyższe szczyty świata', 'geografia'],
     ['Wymień 3 stolice państw skandynawskich', 'geografia'],
     ['Wymień 3 znane parki narodowe na świecie', 'geografia'],
     ['Wymień 3 europejskie stolice nad morzem', 'geografia'],
-    ['Wymień 3 znane zamki w Europie', 'geografia'],
     ['Wymień 3 znane miasta w Stanach Zjednoczonych', 'geografia'],
-    ['Wymień 3 znane mosty świata', 'geografia'],
     ['Wymień 3 znane pustynie świata', 'geografia'],
     ['Wymień 3 znane szczyty świata', 'geografia'],
     ['Wymień 3 stolice państw Ameryki Łacińskiej', 'geografia'],
     ['Wymień 3 znane megamiasta świata', 'geografia'],
     ['Wymień 3 znane delty rzek', 'geografia'],
-
-    // ── historia ──
     ['Wymień 3 znane konstytucje świata', 'historia'],
-    ['Wymień 3 znane bitwy II wojny światowej', 'historia'],
     ['Wymień 3 wynalazki XXI wieku', 'historia'],
     ['Wymień 3 znane konflikty XX wieku', 'historia'],
     ['Wymień 3 znane pandemie lub epidemie w historii', 'historia'],
     ['Wymień 3 znane bitwy starożytności', 'historia'],
-    ['Wymień 3 sławnych podróżników', 'historia'],
-    ['Wymień 3 znane uniwersytety na świecie', 'historia'],
     ['Wymień 3 wynalazki ułatwiające komunikację', 'historia'],
-    ['Wymień 3 znane traktaty międzynarodowe', 'historia'],
     ['Wymień 3 znane rewolucje', 'historia'],
     ['Wymień 3 europejskie instytucje unijne', 'historia'],
-
-    // ── sport ──
     ['Wymień 3 znane stadiony piłkarskie', 'sport'],
     ['Wymień 3 wybitne sportsmenki świata', 'sport'],
     ['Wymień 3 znane dyscypliny zimowe', 'sport'],
     ['Wymień 3 ekstremalne sporty', 'sport'],
     ['Wymień 3 sławne polskie rywalizacje sportowe', 'sport'],
-
-    // ── codzienne ──
     ['Wymień 3 znane firmy technologiczne', 'codzienne'],
     ['Wymień 3 platformy streamingowe', 'codzienne'],
     ['Wymień 3 rodzaje rzeczowników', 'szkola'],
@@ -835,25 +653,18 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 wymówki na spóźnienie do szkoły', 'codzienne'],
     ['Wymień 3 sposoby na stres egzaminacyjny', 'codzienne'],
     ['Wymień 3 rzeczy w lodówce po imprezie', 'codzienne'],
-
-    // ── przyroda ──
     ['Wymień 3 zagrożone gatunki zwierząt', 'przyroda'],
     ['Wymień 3 znane orkiestry symfoniczne', 'kultura'],
   ],
 
   'dorosli': [
-    // ── polska ──
     ['Wymień 3 polskich premierów', 'polska'],
-    ['Wymień 3 polskie filmy', 'polska'],
-    ['Wymień 3 polskich noblistów', 'polska'],
     ['Wymień 3 polskich reżyserów', 'polska'],
-    ['Wymień 3 polskie zabytki UNESCO', 'polska'],
     ['Wymień 3 polskich poetów romantyzmu', 'polska'],
     ['Wymień 3 sławnych polskich aktorów', 'polska'],
     ['Wymień 3 polskie wybitne sportowczynie', 'polska'],
     ['Wymień 3 znane teatry w Polsce', 'polska'],
     ['Wymień 3 polskie wybitne pisarki', 'polska'],
-    ['Wymień 3 polskie tradycje świąteczne', 'polska'],
     ['Wymień 3 polskich aktorów teatralnych', 'polska'],
     ['Wymień 3 znane książki Stanisława Lema', 'polska'],
     ['Wymień 3 znane dzieła Chopina', 'polska'],
@@ -861,7 +672,6 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 sławnych prezenterów telewizyjnych w Polsce', 'polska'],
     ['Wymień 3 polskie znane seriale', 'polska'],
     ['Wymień 3 polskich kierowców F1 lub rajdowych', 'polska'],
-    ['Wymień 3 polskich olimpijczyków', 'polska'],
     ['Wymień 3 znane polskie restauracje lub kucharzy', 'polska'],
     ['Wymień 3 wybitnych Polaków w historii', 'polska'],
     ['Wymień 3 polskie reżyserki lub reżyserów współczesnych', 'polska'],
@@ -880,15 +690,12 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 polskie miasta uniwersyteckie', 'polska'],
     ['Wymień 3 polskie znane kobiety w historii', 'polska'],
     ['Wymień 3 polskich himalaistów lub himalaistki', 'polska'],
-    ['Wymień 3 polskie zwyczaje weselne', 'polska'],
     ['Wymień 3 polskie znane piłkarki', 'polska'],
     ['Wymień 3 polskich znanych prezenterów radiowych', 'polska'],
     ['Wymień 3 polskie miasta z lotniskiem międzynarodowym', 'polska'],
     ['Wymień 3 polskie znane producentki ubrań lub projektantki mody', 'polska'],
     ['Wymień 3 polskie znane festiwale literackie', 'polska'],
     ['Wymień 3 polskich klasycznych pisarzy', 'polska'],
-
-    // ── filmy ──
     ['Wymień 3 reżyserów filmowych', 'filmy'],
     ['Wymień 3 znane musicale', 'filmy'],
     ['Wymień 3 znane musicale na Broadwayu', 'filmy'],
@@ -901,8 +708,6 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 znane seriale HBO', 'filmy'],
     ['Wymień 3 znane filmy z Robertem De Niro', 'filmy'],
     ['Wymień 3 znane filmy ze Streep, Hopkinsem lub innym klasykiem', 'filmy'],
-
-    // ── muzyka ──
     ['Wymień 3 sławnych kompozytorów klasycznych', 'muzyka'],
     ['Wymień 3 znane orkiestry świata', 'muzyka'],
     ['Wymień 3 znane symfonie', 'muzyka'],
@@ -916,16 +721,11 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 polskie zespoły big-beatowe', 'muzyka'],
     ['Wymień 3 znane piosenki na wesele', 'muzyka'],
     ['Wymień 3 znane piosenki o Polsce', 'muzyka'],
-
-    // ── święta ──
     ['Wymień 3 zwyczaje pierwszej komunii', 'swieta'],
-    ['Wymień 3 zwyczaje sylwestrowe', 'swieta'],
     ['Wymień 3 zwyczaje wielkanocne w Polsce', 'swieta'],
     ['Wymień 3 polskie tradycje dożynkowe', 'swieta'],
     ['Wymień 3 polskie tradycje noworoczne', 'swieta'],
     ['Wymień 3 popularne zwyczaje walentynkowe', 'swieta'],
-
-    // ── jedzenie ──
     ['Wymień 3 rodzaje kawy', 'jedzenie'],
     ['Wymień 3 dania kuchni włoskiej', 'jedzenie'],
     ['Wymień 3 rodzaje wina', 'jedzenie'],
@@ -938,8 +738,6 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 składniki tatara', 'jedzenie'],
     ['Wymień 3 polskie znane sery regionalne', 'jedzenie'],
     ['Wymień 3 składniki klasycznego rosołu', 'jedzenie'],
-
-    // ── kultura ──
     ['Wymień 3 znane obrazy', 'kultura'],
     ['Wymień 3 znane galerie sztuki', 'kultura'],
     ['Wymień 3 sławnych malarzy europejskich', 'kultura'],
@@ -952,13 +750,10 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 znane galerie sztuki świata', 'kultura'],
     ['Wymień 3 nurty w filozofii', 'kultura'],
     ['Wymień 3 znane festiwale fantastyki lub komiksu', 'kultura'],
-
-    // ── codzienne ──
     ['Wymień 3 waluty', 'codzienne'],
     ['Wymień 3 marki zegarków', 'codzienne'],
     ['Wymień 3 rzeczy, które robisz rano', 'codzienne'],
     ['Wymień 3 marki samochodów premium', 'codzienne'],
-    ['Wymień 3 znane firmy technologiczne', 'codzienne'],
     ['Wymień 3 narzędzia w warsztacie', 'codzienne'],
     ['Wymień 3 znane firmy motoryzacyjne', 'codzienne'],
     ['Wymień 3 znane perfumiarnie lub marki perfum', 'codzienne'],
@@ -968,8 +763,6 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 rzeczy w portfelu', 'codzienne'],
     ['Wymień 3 rzeczy, które zostawiasz w samochodzie', 'codzienne'],
     ['Wymień 3 wymówki przed dzieckiem', 'codzienne'],
-
-    // ── geografia ──
     ['Wymień 3 stolice Ameryki Południowej', 'geografia'],
     ['Wymień 3 stolice państw azjatyckich', 'geografia'],
     ['Wymień 3 europejskie języki urzędowe', 'geografia'],
@@ -980,12 +773,9 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 rzeki świata', 'geografia'],
     ['Wymień 3 znane wieżowce świata', 'geografia'],
     ['Wymień 3 stolice państw afrykańskich', 'geografia'],
-    ['Wymień 3 znane parki narodowe na świecie', 'geografia'],
     ['Wymień 3 najdłuższe rzeki świata', 'geografia'],
     ['Wymień 3 największe pustynie świata', 'geografia'],
     ['Wymień 3 znane wieżowce w Europie', 'geografia'],
-
-    // ── historia ──
     ['Wymień 3 światowych polityków', 'historia'],
     ['Wymień 3 elementy systemu prawnego', 'historia'],
     ['Wymień 3 znane uniwersytety na świecie', 'historia'],
@@ -996,31 +786,22 @@ const RAW: Record<Tier, RawPrompt[]> = {
     ['Wymień 3 starożytne cywilizacje świata', 'historia'],
     ['Wymień 3 typy systemów politycznych', 'historia'],
     ['Wymień 3 znane traktaty międzynarodowe', 'historia'],
-    ['Wymień 3 znane bitwy starożytności', 'historia'],
     ['Wymień 3 znane okręty wojenne lub statki', 'historia'],
     ['Wymień 3 znane biografie polityków', 'historia'],
     ['Wymień 3 wybitne kobiety z polskiej historii', 'historia'],
     ['Wymień 3 znane epoki w historii Polski', 'historia'],
-
-    // ── sport ──
     ['Wymień 3 sławnych kierowców F1', 'sport'],
     ['Wymień 3 zwycięzców Wimbledonu', 'sport'],
     ['Wymień 3 znane stadiony Europy', 'sport'],
     ['Wymień 3 znane derby piłkarskie świata', 'sport'],
     ['Wymień 3 sławnych komentatorów sportowych w Polsce', 'sport'],
-
-    // ── nauka ──
     ['Wymień 3 dziedziny matematyki', 'nauka'],
     ['Wymień 3 sławnych ekonomistów', 'nauka'],
     ['Wymień 3 znane teorie ekonomiczne', 'nauka'],
     ['Wymień 3 choroby cywilizacyjne', 'nauka'],
     ['Wymień 3 znane technologie XXI wieku', 'nauka'],
-
-    // ── bajki ──
     ['Wymień 3 polskie kultowe bajki PRL', 'bajki'],
     ['Wymień 3 znane bajki Disneya z lat 90.', 'bajki'],
-    ['Wymień 3 znane filmy animowane Pixara', 'bajki'],
-    ['Wymień 3 polskie znane dobranocki', 'bajki'],
     ['Wymień 3 anime kultowe', 'bajki'],
   ],
 };
