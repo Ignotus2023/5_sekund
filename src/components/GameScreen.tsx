@@ -18,7 +18,7 @@ interface Props {
   onExit: () => void;
 }
 
-type Phase = 'ready' | 'running' | 'judged' | 'paused';
+type Phase = 'handoff' | 'ready' | 'running' | 'judged' | 'paused';
 
 interface UsedMap {
   [tier: string]: string[];
@@ -28,11 +28,11 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
   const [activeIndex, setActiveIndex] = useState(0);
   const [used, setUsed] = useState<UsedMap>({});
   const [currentPrompt, setCurrentPrompt] = useState<Prompt | null>(null);
-  const [phase, setPhase] = useState<Phase>('ready');
+  const [phase, setPhase] = useState<Phase>('handoff');
 
   // Refy synchronizowane ze state, żeby callback po przeczytaniu hasła
   // widział aktualną fazę i ID hasła (a nie wartości z momentu wywołania speak()).
-  const phaseRef = useRef<Phase>('ready');
+  const phaseRef = useRef<Phase>('handoff');
   const currentPromptIdRef = useRef<string | null>(null);
   useEffect(() => {
     phaseRef.current = phase;
@@ -114,15 +114,25 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
     },
   });
 
-  // wylosuj na wejściu na ekran i przy każdej zmianie aktywnego gracza
+  // Na początku każdej tury (start gry oraz po każdej zmianie aktywnego gracza)
+  // pokaż panel "Teraz: <gracz>" i poczekaj na jego potwierdzenie. Dopiero wtedy
+  // wylosuj i przeczytaj hasło — dzięki temu telefon można podać następnej osobie.
   useEffect(() => {
-    newPrompt();
+    setPhase('handoff');
+    setCurrentPrompt(null);
+    timer.stop();
+    cancelSpeech();
     return () => {
       cancelSpeech();
       timer.stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIndex]);
+
+  const acceptTurn = () => {
+    if (phase !== 'handoff') return;
+    newPrompt();
+  };
 
   // sprzątanie przy wyjściu
   useEffect(() => {
@@ -199,113 +209,152 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
         </button>
       </header>
 
-      <div
-        className="rounded-3xl p-4 sm:p-6 text-center shadow-md border-4"
-        style={{
-          background: `linear-gradient(135deg, ${activePlayer.color}33, ${activePlayer.color}11)`,
-          borderColor: activePlayer.color,
-        }}
-      >
-        <div className="text-sm uppercase font-bold tracking-wide text-slate-600">Kolej</div>
-        <div className="text-2xl sm:text-3xl font-black flex items-center justify-center gap-2 mt-1">
-          <span className="text-3xl">{activePlayer.emoji}</span>
-          <span style={{ color: activePlayer.color }}>{activePlayer.name}</span>
-        </div>
-        <div className="text-xs sm:text-sm text-slate-600 mt-1">
-          poziom {TIER_LABEL[activeTier]} · ⏱ {turnSeconds} s
-        </div>
-      </div>
-
-      <section className="card flex-1 flex flex-col items-center justify-center text-center py-8 min-h-[180px]">
-        {currentPrompt ? (
-          <div key={currentPrompt.id} className="animate-pop-in">
-            <div className="text-3xl sm:text-5xl font-black leading-tight px-2">
-              {currentPrompt.text}
+      {phase === 'handoff' ? (
+        <section
+          key={`handoff-${activePlayer.id}`}
+          className="rounded-3xl flex-1 flex flex-col items-center justify-center text-center px-4 py-10 shadow-md border-4 animate-pop-in"
+          style={{
+            background: `linear-gradient(135deg, ${activePlayer.color}33, ${activePlayer.color}11)`,
+            borderColor: activePlayer.color,
+          }}
+        >
+          <div className="text-sm uppercase font-bold tracking-wide text-slate-600">
+            Teraz kolej
+          </div>
+          <div className="text-8xl my-3" aria-hidden>
+            {activePlayer.emoji}
+          </div>
+          <div
+            className="text-4xl sm:text-5xl font-black leading-tight"
+            style={{ color: activePlayer.color }}
+          >
+            {activePlayer.name}
+          </div>
+          <div className="text-sm text-slate-600 mt-2">
+            poziom {TIER_LABEL[activeTier]} · ⏱ {turnSeconds} s
+          </div>
+          <button
+            className="btn-primary text-2xl px-10 py-5 mt-8"
+            onClick={acceptTurn}
+            autoFocus
+          >
+            Gotowy! ▶
+          </button>
+          <div className="text-xs text-slate-500 mt-4 max-w-xs">
+            Po kliknięciu lektor przeczyta hasło i ruszy odliczanie.
+          </div>
+        </section>
+      ) : (
+        <>
+          <div
+            className="rounded-3xl p-4 sm:p-6 text-center shadow-md border-4"
+            style={{
+              background: `linear-gradient(135deg, ${activePlayer.color}33, ${activePlayer.color}11)`,
+              borderColor: activePlayer.color,
+            }}
+          >
+            <div className="text-sm uppercase font-bold tracking-wide text-slate-600">Kolej</div>
+            <div className="text-2xl sm:text-3xl font-black flex items-center justify-center gap-2 mt-1">
+              <span className="text-3xl">{activePlayer.emoji}</span>
+              <span style={{ color: activePlayer.color }}>{activePlayer.name}</span>
             </div>
-            {currentPrompt.category && CATEGORY_BY_KEY[currentPrompt.category] && (
-              <div className="inline-flex items-center gap-1 mt-3 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wide">
-                <span>{CATEGORY_BY_KEY[currentPrompt.category].emoji}</span>
-                <span>{CATEGORY_BY_KEY[currentPrompt.category].label}</span>
+            <div className="text-xs sm:text-sm text-slate-600 mt-1">
+              poziom {TIER_LABEL[activeTier]} · ⏱ {turnSeconds} s
+            </div>
+          </div>
+
+          <section className="card flex-1 flex flex-col items-center justify-center text-center py-8 min-h-[180px]">
+            {currentPrompt ? (
+              <div key={currentPrompt.id} className="animate-pop-in">
+                <div className="text-3xl sm:text-5xl font-black leading-tight px-2">
+                  {currentPrompt.text}
+                </div>
+                {currentPrompt.category && CATEGORY_BY_KEY[currentPrompt.category] && (
+                  <div className="inline-flex items-center gap-1 mt-3 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wide">
+                    <span>{CATEGORY_BY_KEY[currentPrompt.category].emoji}</span>
+                    <span>{CATEGORY_BY_KEY[currentPrompt.category].label}</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-slate-500">Brak haseł.</div>
+            )}
+            {!ttsAvailable && (
+              <div className="mt-3 text-xs text-amber-700 bg-amber-100 rounded-lg px-2 py-1">
+                Lektor pl-PL niedostępny na tym urządzeniu.
               </div>
             )}
-          </div>
-        ) : (
-          <div className="text-slate-500">Brak haseł.</div>
-        )}
-        {!ttsAvailable && (
-          <div className="mt-3 text-xs text-amber-700 bg-amber-100 rounded-lg px-2 py-1">
-            Lektor pl-PL niedostępny na tym urządzeniu.
-          </div>
-        )}
-      </section>
+          </section>
 
-      <section className="flex justify-center">
-        <CountdownRing
-          remaining={phase === 'ready' ? turnSeconds : timer.remaining}
-          duration={turnSeconds}
-        />
-      </section>
+          <section className="flex justify-center">
+            <CountdownRing
+              remaining={phase === 'ready' ? turnSeconds : timer.remaining}
+              duration={turnSeconds}
+            />
+          </section>
 
-      <section className="flex flex-wrap gap-2 justify-center">
-        <button className="btn-ghost" onClick={readAgain}>🔊 Przeczytaj ponownie</button>
-        <button className="btn-ghost" onClick={skipPrompt} disabled={phase === 'running'}>
-          🔀 Pomiń hasło
-        </button>
-      </section>
+          <section className="flex flex-wrap gap-2 justify-center">
+            <button className="btn-ghost" onClick={readAgain}>🔊 Przeczytaj ponownie</button>
+            <button className="btn-ghost" onClick={skipPrompt} disabled={phase === 'running'}>
+              🔀 Pomiń hasło
+            </button>
+          </section>
 
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        {phase === 'ready' && (
-          <button className="btn-primary col-span-full text-xl py-5" onClick={startTimer}>
-            ▶ Start
-          </button>
-        )}
-        {phase === 'running' && (
-          <>
-            <button className="btn-soft sm:col-span-1" onClick={pauseTimer}>⏸ Pauza</button>
-            <button className="btn-success sm:col-span-1" onClick={() => judge(true)}>
-              ✅ Zaliczone
-            </button>
-            <button className="btn-danger sm:col-span-1" onClick={() => judge(false)}>
-              ❌ Pudło
-            </button>
-          </>
-        )}
-        {phase === 'paused' && (
-          <>
-            <button className="btn-primary sm:col-span-1" onClick={resumeTimer}>▶ Wznów</button>
-            <button className="btn-success sm:col-span-1" onClick={() => judge(true)}>
-              ✅ Zaliczone
-            </button>
-            <button className="btn-danger sm:col-span-1" onClick={() => judge(false)}>
-              ❌ Pudło
-            </button>
-          </>
-        )}
-        {phase === 'judged' && (
-          <>
-            <button className="btn-success sm:col-span-1" onClick={() => judge(true)}>
-              ✅ Zaliczone
-            </button>
-            <button className="btn-danger sm:col-span-1" onClick={() => judge(false)}>
-              ❌ Pudło
-            </button>
-            <button className="btn-soft sm:col-span-1" onClick={advance}>
-              ➡ Następny
-            </button>
-          </>
-        )}
-      </section>
+          <section className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {phase === 'ready' && (
+              <button className="btn-primary col-span-full text-xl py-5" onClick={startTimer}>
+                ▶ Start
+              </button>
+            )}
+            {phase === 'running' && (
+              <>
+                <button className="btn-soft sm:col-span-1" onClick={pauseTimer}>⏸ Pauza</button>
+                <button className="btn-success sm:col-span-1" onClick={() => judge(true)}>
+                  ✅ Zaliczone
+                </button>
+                <button className="btn-danger sm:col-span-1" onClick={() => judge(false)}>
+                  ❌ Pudło
+                </button>
+              </>
+            )}
+            {phase === 'paused' && (
+              <>
+                <button className="btn-primary sm:col-span-1" onClick={resumeTimer}>▶ Wznów</button>
+                <button className="btn-success sm:col-span-1" onClick={() => judge(true)}>
+                  ✅ Zaliczone
+                </button>
+                <button className="btn-danger sm:col-span-1" onClick={() => judge(false)}>
+                  ❌ Pudło
+                </button>
+              </>
+            )}
+            {phase === 'judged' && (
+              <>
+                <button className="btn-success sm:col-span-1" onClick={() => judge(true)}>
+                  ✅ Zaliczone
+                </button>
+                <button className="btn-danger sm:col-span-1" onClick={() => judge(false)}>
+                  ❌ Pudło
+                </button>
+                <button className="btn-soft sm:col-span-1" onClick={advance}>
+                  ➡ Następny
+                </button>
+              </>
+            )}
+          </section>
 
-      <section className="card">
-        <div className="text-xs uppercase tracking-wide text-slate-500 mb-1">Korekta punktów</div>
-        <div className="flex flex-wrap gap-2">
-          <button className="btn-soft" onClick={() => adjustScore(-1)}>−1 pkt</button>
-          <button className="btn-soft" onClick={() => adjustScore(+1)}>+1 pkt</button>
-          <div className="ml-auto self-center text-sm">
-            <span className="font-bold">{activePlayer.name}</span>: {activePlayer.score} pkt
-          </div>
-        </div>
-      </section>
+          <section className="card">
+            <div className="text-xs uppercase tracking-wide text-slate-500 mb-1">Korekta punktów</div>
+            <div className="flex flex-wrap gap-2">
+              <button className="btn-soft" onClick={() => adjustScore(-1)}>−1 pkt</button>
+              <button className="btn-soft" onClick={() => adjustScore(+1)}>+1 pkt</button>
+              <div className="ml-auto self-center text-sm">
+                <span className="font-bold">{activePlayer.name}</span>: {activePlayer.score} pkt
+              </div>
+            </div>
+          </section>
+        </>
+      )}
     </div>
   );
 }

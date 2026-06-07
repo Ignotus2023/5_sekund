@@ -3,6 +3,7 @@ import type { Player, GameSettings, Tier } from '../types';
 import { TIERS, TIER_LABEL, describeAge, tierOf } from '../lib/tier';
 import { nextColor, nextEmoji, uid } from '../lib/utils';
 import { CategorySelector } from './CategorySelector';
+import { EmojiPicker } from './EmojiPicker';
 
 interface Props {
   players: Player[];
@@ -71,43 +72,52 @@ export function PlayerSetup({ players, setPlayers, settings, setSettings, onStar
           {players.length === 0 && (
             <p className="text-slate-500 text-sm italic">Dodaj przynajmniej jednego gracza.</p>
           )}
-          {players.map((p) => (
-            <div
-              key={p.id}
-              className="flex items-center gap-3 rounded-2xl p-3 border-2"
-              style={{ borderColor: p.color + '55', background: p.color + '11' }}
-            >
-              <span className="text-3xl" aria-hidden>{p.emoji}</span>
-              <input
-                className="input flex-1 min-w-0"
-                value={p.name}
-                onChange={(e) => updatePlayer(p.id, { name: e.target.value })}
-                aria-label="Imię gracza"
-              />
-              <select
-                className="input w-28"
-                value={p.age === 'dorosly' ? 'dorosly' : String(p.age)}
-                onChange={(e) =>
-                  updatePlayer(p.id, {
-                    age: e.target.value === 'dorosly' ? 'dorosly' : Number(e.target.value),
-                  })
-                }
-                aria-label="Wiek gracza"
+          {players.map((p) => {
+            const takenEmojis = players.filter((x) => x.id !== p.id).map((x) => x.emoji);
+            return (
+              <div
+                key={p.id}
+                className="flex items-center gap-3 rounded-2xl p-3 border-2"
+                style={{ borderColor: p.color + '55', background: p.color + '11' }}
               >
-                {Array.from({ length: 12 }, (_, i) => i + 5).map((a) => (
-                  <option key={a} value={a}>{a} lat</option>
-                ))}
-                <option value="dorosly">Dorosły</option>
-              </select>
-              <button
-                className="btn-soft px-3"
-                onClick={() => removePlayer(p.id)}
-                aria-label={`Usuń gracza ${p.name}`}
-              >
-                ✕
-              </button>
-            </div>
-          ))}
+                <EmojiPicker
+                  value={p.emoji}
+                  onChange={(emoji) => updatePlayer(p.id, { emoji })}
+                  taken={takenEmojis}
+                  color={p.color}
+                  label={`Zmień ikonkę gracza ${p.name}`}
+                />
+                <input
+                  className="input flex-1 min-w-0"
+                  value={p.name}
+                  onChange={(e) => updatePlayer(p.id, { name: e.target.value })}
+                  aria-label="Imię gracza"
+                />
+                <select
+                  className="input w-28"
+                  value={p.age === 'dorosly' ? 'dorosly' : String(p.age)}
+                  onChange={(e) =>
+                    updatePlayer(p.id, {
+                      age: e.target.value === 'dorosly' ? 'dorosly' : Number(e.target.value),
+                    })
+                  }
+                  aria-label="Wiek gracza"
+                >
+                  {Array.from({ length: 12 }, (_, i) => i + 5).map((a) => (
+                    <option key={a} value={a}>{a} lat</option>
+                  ))}
+                  <option value="dorosly">Dorosły</option>
+                </select>
+                <button
+                  className="btn-soft px-3"
+                  onClick={() => removePlayer(p.id)}
+                  aria-label={`Usuń gracza ${p.name}`}
+                >
+                  ✕
+                </button>
+              </div>
+            );
+          })}
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2">

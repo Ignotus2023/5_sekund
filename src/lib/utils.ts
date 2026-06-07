@@ -13,7 +13,13 @@ export const PLAYER_COLORS = [
   '#8b5cf6', // purple
 ];
 
-export const PLAYER_EMOJIS = ['🦊', '🐼', '🦁', '🐻', '🐯', '🐸', '🐵', '🐧', '🦄', '🐶', '🐱', '🐰'];
+export const PLAYER_EMOJIS = [
+  '🦊', '🐼', '🦁', '🐻', '🐯', '🐸',
+  '🐵', '🐧', '🦄', '🐶', '🐱', '🐰',
+  '🐭', '🐹', '🐨', '🐷', '🐮', '🐔',
+  '🐺', '🦝', '🦓', '🦒', '🐢', '🐳',
+  '🐙', '🦋', '🐞', '🦖', '🐲', '🦔',
+];
 
 export function nextColor(usedColors: string[]): string {
   const free = PLAYER_COLORS.find((c) => !usedColors.includes(c));
