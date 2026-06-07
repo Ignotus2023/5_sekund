@@ -9,7 +9,9 @@ export type CategoryKey =
   | 'sport'
   | 'geografia'
   | 'nauka'
-  | 'historia';
+  | 'historia'
+  | 'polska'
+  | 'bajki';
 
 export interface CategoryMeta {
   key: CategoryKey;
@@ -29,6 +31,8 @@ export const CATEGORIES: CategoryMeta[] = [
   { key: 'geografia', label: 'Geografia',  emoji: '🗺️' },
   { key: 'nauka',     label: 'Nauka',      emoji: '🔬' },
   { key: 'historia',  label: 'Historia',   emoji: '🏛️' },
+  { key: 'polska',    label: 'Polska',     emoji: '🇵🇱' },
+  { key: 'bajki',     label: 'Bajki',      emoji: '🧚' },
 ];
 
 export const CATEGORY_KEYS = CATEGORIES.map((c) => c.key);
