@@ -9,6 +9,7 @@ import { pickRandom } from '../lib/utils';
 import { useTimer } from '../hooks/useTimer';
 import { useAudio } from '../hooks/useAudio';
 import { useSpeech } from '../hooks/useSpeech';
+import { usePersistedState } from '../hooks/usePersistedState';
 
 const SPEAK_DELAY_MS = 250;
 const AUTO_START_AFTER_TTS_MS = 300;
@@ -27,11 +28,18 @@ function normalizeText(text: string): string {
 
 export function GameScreen({ players, settings, onScore, onFinish, onExit }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
-  // Śledzimy wykorzystane hasła po znormalizowanym tekście — globalnie, nie
-  // per-poziom. Dzięki temu jeśli to samo hasło istnieje w kilku poziomach
-  // (np. "Wymień 3 polskie miasta wojewódzkie" w 4 tierach), nie wyjdzie
-  // dwa razy w jednej partii dla różnych graczy.
-  const usedTextsRef = useRef<Set<string>>(new Set());
+  // Historia wylosowanych haseł persystowana w localStorage — przeżywa
+  // rozegranie partii i przejście do ResultScreen/setup. Dzięki temu kolejna
+  // partia nie powtarza haseł, które rodzina już widziała w poprzednich
+  // rundach. Auto-reset puli (w drawPrompt) wciska tylko gdy bieżąca
+  // kombinacja tier+kategoria się wyczerpie.
+  const [persistedUsedTexts, setPersistedUsedTexts] = usePersistedState<string[]>(
+    'used-prompt-texts',
+    [],
+  );
+  // Working memory — Set inicjalizowany raz z persystencji. Mutowany podczas
+  // gry; po każdej zmianie synchronizowany z setPersistedUsedTexts.
+  const usedTextsRef = useRef<Set<string>>(new Set(persistedUsedTexts));
   const [currentPrompt, setCurrentPrompt] = useState<Prompt | null>(null);
   const [phase, setPhase] = useState<Phase>('handoff');
 
@@ -109,9 +117,9 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
     ],
   );
 
-  // Losowanie hasła z synchronicznym zapisem do refa. Filtracja po
-  // znormalizowanym tekście (globalnie), żeby ten sam tekst nie wyszedł
-  // dwóm graczom z różnych poziomów wiekowych.
+  // Losowanie hasła z synchronicznym zapisem do refa + persystencji.
+  // Filtracja po znormalizowanym tekście (globalnie), żeby ten sam tekst
+  // nie wyszedł dwóm graczom z różnych poziomów ani w kolejnej partii.
   const drawPrompt = useCallback(
     (tier: Tier): Prompt | null => {
       const fullPool = PROMPTS[tier];
@@ -134,9 +142,11 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
       const picked = pickRandom(available);
       if (!picked) return null;
       used.add(normalizeText(picked.text));
+      // Synchronizujemy z localStorage (z debounce'em — zob. usePersistedState).
+      setPersistedUsedTexts(Array.from(used));
       return picked;
     },
-    [settings.selectedCategories],
+    [settings.selectedCategories, setPersistedUsedTexts],
   );
 
   // Startuje odliczanie. Używa currentPromptIdRef (świeży po commit Reacta),

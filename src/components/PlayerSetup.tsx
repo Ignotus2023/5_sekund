@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import type { Player, GameSettings, Tier } from '../types';
 import { TIERS, TIER_LABEL, describeAge, tierOf, DEFAULT_BONUS } from '../lib/tier';
 import { nextColor, nextEmoji, uid } from '../lib/utils';
+import { usePersistedState } from '../hooks/usePersistedState';
 import { CategorySelector } from './CategorySelector';
 import { EmojiPicker } from './EmojiPicker';
 
@@ -32,6 +33,12 @@ export function PlayerSetup({
   const newNameId = useId();
   const newAgeId = useId();
   const speechRateId = useId();
+  // Współdzielony z GameScreen klucz — pozwala pokazać licznik i zresetować
+  // historię wylosowanych haseł.
+  const [usedTexts, setUsedTexts] = usePersistedState<string[]>(
+    'used-prompt-texts',
+    [],
+  );
 
   const addPlayer = () => {
     const trimmed = name.trim().slice(0, 24);
@@ -81,6 +88,17 @@ export function PlayerSetup({
       muted: false,
       selectedCategories: [],
     });
+  };
+
+  const resetUsedTexts = () => {
+    if (
+      !confirm(
+        `Wyczyścić historię ${usedTexts.length} wylosowanych haseł? Kolejna partia będzie mogła pokazać je od nowa.`,
+      )
+    ) {
+      return;
+    }
+    setUsedTexts([]);
   };
 
   const canStart = players.length >= 1;
@@ -412,6 +430,33 @@ export function PlayerSetup({
           </div>
         )}
       </section>
+
+      {usedTexts.length > 0 && (
+        <section className="card" aria-labelledby="history-heading">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3
+                id="history-heading"
+                className="font-bold text-slate-800 text-sm uppercase"
+              >
+                Historia haseł
+              </h3>
+              <p className="text-xs text-slate-600 mt-1">
+                Pamiętam <strong>{usedTexts.length}</strong>{' '}
+                {usedTexts.length === 1 ? 'wylosowane hasło' : 'wylosowanych haseł'}{' '}
+                z poprzednich partii — w kolejnej rundzie nie wyjdą ponownie.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={resetUsedTexts}
+              className="btn-soft text-sm whitespace-nowrap"
+            >
+              🗑 Wyczyść
+            </button>
+          </div>
+        </section>
+      )}
 
       {players.length > 0 && (
         <section className="card" aria-labelledby="preview-heading">
