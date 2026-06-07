@@ -10,7 +10,6 @@ import { useTimer } from '../hooks/useTimer';
 import { useAudio } from '../hooks/useAudio';
 import { useSpeech } from '../hooks/useSpeech';
 
-// Czasówki — wyciągnięte ze "magicznych" wartości w kodzie.
 const SPEAK_DELAY_MS = 250;
 const AUTO_START_AFTER_TTS_MS = 300;
 
@@ -29,21 +28,20 @@ interface UsedMap {
 export function GameScreen({ players, settings, onScore, onFinish, onExit }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
   // Pula użytych haseł żyje tylko w trakcie partii i nie ma UI, który by ją
-  // czytał — trzymamy w refie, dzięki czemu unikamy wyścigu, w którym
-  // funkcyjny setUsed czytałby starą wartość, gdy losowanie i zapis dzieją
-  // się w jednym takcie eventu.
+  // czytał — trzymamy w refie, dzięki czemu unikamy wyścigu (async updater
+  // czytałby starą wartość, gdy losowanie i zapis dzieją się w jednym evencie).
   const usedRef = useRef<UsedMap>({});
   const [currentPrompt, setCurrentPrompt] = useState<Prompt | null>(null);
   const [phase, setPhase] = useState<Phase>('handoff');
 
-  // Refy synchronizowane ze state, żeby callback po przeczytaniu hasła
-  // widział aktualną fazę i ID hasła (a nie wartości z momentu wywołania speak()).
+  // Refy synchronizowane ze state, żeby callback po przeczytaniu hasła widział
+  // aktualną fazę i ID hasła, a nie wartości z momentu wywołania speak().
   const phaseRef = useRef<Phase>('handoff');
   const currentPromptIdRef = useRef<string | null>(null);
-  // Guard przeciw podwójnemu osądzeniu (np. double-tap "Zaliczone").
+  // Guard przeciw podwójnemu osądzeniu (double-tap "Zaliczone").
   const judgingRef = useRef(false);
-  // Trzymamy ID timeoutu poprzedzającego speak() — czyścimy go w cancelSpeech,
-  // żeby skip/start w trakcie 250 ms okienka nie wystrzelił starego hasła.
+  // setTimeout poprzedzający speak() — czyścimy w cancelSpeech, żeby skip/start
+  // w 250 ms okienku nie wystrzelił starego hasła.
   const pendingSpeakTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -59,8 +57,28 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
     muted: settings.muted,
   });
 
+  // Destrukturyzujemy metody timera od razu — useTimer zwraca nowy literal
+  // przy każdym renderze (remaining/running zmieniają się przez useState),
+  // więc trzymanie `timer` w deps useEffect resetowałoby fazę co frame.
+  // Same metody (start/stop/pause/resume) są stabilnymi useCallback-ami.
+  const {
+    remaining: timerRemaining,
+    start: timerStart,
+    pause: timerPause,
+    resume: timerResume,
+    stop: timerStop,
+  } = useTimer({
+    onTick: (left) => {
+      if (left > 1) play('tick');
+    },
+    onEnd: () => {
+      play('end');
+      setPhase('judged');
+    },
+  });
+
   // Cancel także anuluje pending speak-timeout — odporne na szybkie sekwencje
-  // newPrompt → skip → newPrompt, gdzie stare hasło zdążyłoby się zacząć czytać.
+  // newPrompt → skip → newPrompt, gdzie stare hasło zdążyłoby zacząć być czytane.
   const cancelSpeech = useCallback(() => {
     if (pendingSpeakTimeoutRef.current != null) {
       clearTimeout(pendingSpeakTimeoutRef.current);
@@ -120,30 +138,20 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
     [settings.selectedCategories],
   );
 
-  const timer = useTimer({
-    onTick: (left) => {
-      if (left > 1) play('tick');
-    },
-    onEnd: () => {
-      play('end');
-      setPhase('judged');
-    },
-  });
-
   // Startuje odliczanie. Używa currentPromptIdRef (świeży po commit Reacta),
   // bo wywoływana jest m.in. z onEnd TTS z domknięcia sprzed ustawienia hasła.
   const startTimer = useCallback(() => {
     if (!currentPromptIdRef.current) return;
     cancelSpeech();
     setPhase('running');
-    timer.start(turnSeconds);
-  }, [cancelSpeech, timer, turnSeconds]);
+    timerStart(turnSeconds);
+  }, [cancelSpeech, timerStart, turnSeconds]);
 
   const newPrompt = useCallback(() => {
     const prompt = drawPrompt(activeTier);
     setCurrentPrompt(prompt);
     setPhase('ready');
-    timer.stop();
+    timerStop();
     cancelSpeech();
     judgingRef.current = false;
     if (!prompt) return;
@@ -167,24 +175,22 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
         },
       });
     }, SPEAK_DELAY_MS);
-  }, [activeTier, cancelSpeech, drawPrompt, speak, startTimer, timer, ttsAvailable]);
+  }, [activeTier, cancelSpeech, drawPrompt, speak, startTimer, timerStop, ttsAvailable]);
 
   // Każda zmiana aktywnego gracza wraca do panelu handoff.
-  // timer.stop i cancelSpeech są stabilnymi useCallback-ami, więc dodajemy
-  // je do deps — zamiast wyłączać lintera.
   useEffect(() => {
     setPhase('handoff');
     setCurrentPrompt(null);
     judgingRef.current = false;
-    timer.stop();
+    timerStop();
     cancelSpeech();
     return () => {
       cancelSpeech();
-      timer.stop();
+      timerStop();
     };
-  }, [activeIndex, cancelSpeech, timer]);
+  }, [activeIndex, cancelSpeech, timerStop]);
 
-  // Awaryjne sprzątanie przy unmount (np. zakończenie / wyjście).
+  // Awaryjne sprzątanie przy unmount.
   useEffect(() => {
     return () => {
       cancelSpeech();
@@ -198,13 +204,13 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
 
   const pauseTimer = () => {
     if (phase !== 'running') return;
-    timer.pause();
+    timerPause();
     setPhase('paused');
   };
 
   const resumeTimer = () => {
     if (phase !== 'paused') return;
-    timer.resume();
+    timerResume();
     setPhase('running');
   };
 
@@ -214,11 +220,10 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
   };
 
   const judge = (success: boolean) => {
-    // Guard przeciwko wielokrotnemu osądzeniu w jednym takcie (double-tap).
     if (judgingRef.current) return;
     if (phase !== 'running' && phase !== 'paused' && phase !== 'judged') return;
     judgingRef.current = true;
-    timer.stop();
+    timerStop();
     if (success) {
       play('point');
       onScore(activePlayer.id, +1);
@@ -229,8 +234,6 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
   };
 
   const skipPrompt = () => {
-    // Skip działa wyłącznie w fazie 'ready' — w 'paused'/'judged' porzucenie
-    // hasła bez sędziowania jest mylące dla prowadzącego.
     if (phase !== 'ready') return;
     newPrompt();
   };
@@ -244,16 +247,14 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
     onScore(activePlayer.id, delta);
   };
 
-  // Zamykamy partię — najpierw ucinamy TTS i timer, dopiero potem oddajemy
-  // kontrolę rodzicowi (unmount zrobi to samo, ale tu jest deterministycznie).
   const handleFinish = () => {
     cancelSpeech();
-    timer.stop();
+    timerStop();
     onFinish();
   };
   const handleExit = () => {
     cancelSpeech();
-    timer.stop();
+    timerStop();
     onExit();
   };
 
@@ -374,7 +375,9 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
                 </div>
                 {CATEGORY_BY_KEY[currentPrompt.category] && (
                   <div className="inline-flex items-center gap-1 mt-3 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wide">
-                    <span aria-hidden>{CATEGORY_BY_KEY[currentPrompt.category].emoji}</span>
+                    <span aria-hidden>
+                      {CATEGORY_BY_KEY[currentPrompt.category].emoji}
+                    </span>
                     <span>{CATEGORY_BY_KEY[currentPrompt.category].label}</span>
                   </div>
                 )}
@@ -394,7 +397,7 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
 
           <section className="flex justify-center" aria-label="Odliczanie">
             <CountdownRing
-              remaining={phase === 'ready' ? turnSeconds : timer.remaining}
+              remaining={phase === 'ready' ? turnSeconds : timerRemaining}
               duration={turnSeconds}
               announce={phase === 'running'}
             />
