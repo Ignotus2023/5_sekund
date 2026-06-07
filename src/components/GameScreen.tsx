@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { GameSettings, Player, Prompt, Tier } from '../types';
 import { CountdownRing } from './CountdownRing';
 import { ScoreBoard } from './ScoreBoard';
@@ -29,6 +29,17 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
   const [used, setUsed] = useState<UsedMap>({});
   const [currentPrompt, setCurrentPrompt] = useState<Prompt | null>(null);
   const [phase, setPhase] = useState<Phase>('ready');
+
+  // Refy synchronizowane ze state, żeby callback po przeczytaniu hasła
+  // widział aktualną fazę i ID hasła (a nie wartości z momentu wywołania speak()).
+  const phaseRef = useRef<Phase>('ready');
+  const currentPromptIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+  useEffect(() => {
+    currentPromptIdRef.current = currentPrompt?.id ?? null;
+  }, [currentPrompt]);
 
   const { play } = useAudio(settings.muted);
   const { speak, cancel: cancelSpeech, available: ttsAvailable } = useSpeech({
@@ -69,8 +80,27 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
     timer.stop();
     if (prompt) {
       setUsed((u) => ({ ...u, [activeTier]: [...(u[activeTier] ?? []), prompt.id] }));
-      // auto-czytaj nowe haslo
-      setTimeout(() => speak(prompt.text), 250);
+      const promptId = prompt.id;
+      // Auto-czytaj nowe haslo, a po przeczytaniu sam wystartuj odliczanie.
+      // Jesli TTS niedostepny lub wyciszony — nie autostartujemy, grajacy klika "Start".
+      setTimeout(() => {
+        speak(prompt.text, {
+          onEnd: () => {
+            if (!ttsAvailable) return;
+            if (currentPromptIdRef.current !== promptId) return;
+            if (phaseRef.current !== 'ready') return;
+            // Krotka chwila zanim startuje timer ("gotowy... start!")
+            window.setTimeout(() => {
+              if (
+                currentPromptIdRef.current === promptId &&
+                phaseRef.current === 'ready'
+              ) {
+                startTimer();
+              }
+            }, 300);
+          },
+        });
+      }, 250);
     }
   };
 

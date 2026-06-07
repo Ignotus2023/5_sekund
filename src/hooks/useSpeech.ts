@@ -5,9 +5,14 @@ interface SpeechOptions {
   muted: boolean;
 }
 
+interface SpeakOptions {
+  onEnd?: () => void;
+}
+
 export function useSpeech({ rate, muted }: SpeechOptions) {
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const voiceRef = useRef<SpeechSynthesisVoice | null>(null);
+  const genRef = useRef(0);
   const [available, setAvailable] = useState(false);
 
   useEffect(() => {
@@ -32,19 +37,26 @@ export function useSpeech({ rate, muted }: SpeechOptions) {
   }, []);
 
   const speak = useCallback(
-    (text: string) => {
-      if (muted) return;
+    (text: string, opts?: SpeakOptions) => {
+      if (muted) return false;
       const synth = synthRef.current;
-      if (!synth) return;
+      if (!synth) return false;
       try {
         synth.cancel();
+        const gen = ++genRef.current;
         const u = new SpeechSynthesisUtterance(text);
         u.lang = 'pl-PL';
         u.rate = Math.max(0.5, Math.min(1.5, rate));
         if (voiceRef.current) u.voice = voiceRef.current;
+        const fire = () => {
+          if (genRef.current === gen) opts?.onEnd?.();
+        };
+        u.onend = fire;
+        u.onerror = fire;
         synth.speak(u);
+        return true;
       } catch {
-        // ignore
+        return false;
       }
     },
     [muted, rate]
@@ -52,6 +64,7 @@ export function useSpeech({ rate, muted }: SpeechOptions) {
 
   const cancel = useCallback(() => {
     try {
+      genRef.current++;
       synthRef.current?.cancel();
     } catch {
       // ignore
