@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import type { GameSettings, Player } from './types';
+import { useEffect, useRef, useState } from 'react';
+import type { GameScreen as GameScreenName, GameSettings, Player } from './types';
 import { DEFAULT_BONUS } from './lib/tier';
+import { sanitizePlayers, sanitizeSettings } from './lib/sanitize';
 import { usePersistedState } from './hooks/usePersistedState';
 import { PlayerSetup } from './components/PlayerSetup';
 import { GameScreen } from './components/GameScreen';
@@ -18,53 +19,56 @@ const DEFAULT_SETTINGS: GameSettings = {
   selectedCategories: [], // [] = wszystkie kategorie
 };
 
-type Screen = 'setup' | 'play' | 'result';
-
 export default function App() {
   const [players, setPlayers] = usePersistedState<Player[]>('players', []);
   const [settings, setSettings] = usePersistedState<GameSettings>('settings', DEFAULT_SETTINGS);
-  const [screen, setScreen] = useState<Screen>('setup');
+  const [screen, setScreen] = useState<GameScreenName>('setup');
   const [winnerId, setWinnerId] = useState<string | null>(null);
 
-  // upewnij sie ze ustawienia z localStorage maja wszystkie wymagane pola
+  // Jednorazowa sanitacja po hydracji z localStorage: kompletna walidacja
+  // struktury, zakresów liczbowych i kolorów (osłona przed wstrzyknięciem
+  // CSS przez interpolację `color` w `style`).
+  const sanitizedRef = useRef(false);
   useEffect(() => {
-    const needsTime =
-      !settings.time ||
-      !settings.time.bonusByTier ||
-      typeof settings.time.baseSeconds !== 'number';
-    const needsCategories = !Array.isArray(settings.selectedCategories);
-    if (needsTime || needsCategories) {
-      setSettings({
-        ...DEFAULT_SETTINGS,
-        ...settings,
-        time: needsTime ? DEFAULT_SETTINGS.time : settings.time,
-        selectedCategories: needsCategories
-          ? DEFAULT_SETTINGS.selectedCategories
-          : settings.selectedCategories,
-      });
+    if (sanitizedRef.current) return;
+    sanitizedRef.current = true;
+    const cleanSettings = sanitizeSettings(settings, DEFAULT_SETTINGS);
+    if (JSON.stringify(cleanSettings) !== JSON.stringify(settings)) {
+      setSettings(cleanSettings);
     }
-  }, [settings, setSettings]);
+    const cleanPlayers = sanitizePlayers(players);
+    if (JSON.stringify(cleanPlayers) !== JSON.stringify(players)) {
+      setPlayers(cleanPlayers);
+    }
+  }, [players, settings, setPlayers, setSettings]);
 
   const startGame = () => {
-    setPlayers(players.map((p) => ({ ...p, score: 0 })));
+    setPlayers((prev) => prev.map((p) => ({ ...p, score: 0 })));
     setWinnerId(null);
     setScreen('play');
   };
 
+  // Czysty updater — bez side-effectów (poprawnie działa w StrictMode).
   const handleScore = (playerId: string, delta: number) => {
-    setPlayers((prev) => {
-      const next = prev.map((p) =>
+    setPlayers((prev) =>
+      prev.map((p) =>
         p.id === playerId ? { ...p, score: Math.max(0, p.score + delta) } : p
-      );
-      const winner =
-        settings.winScore > 0 ? next.find((p) => p.score >= settings.winScore) : null;
-      if (winner) {
-        setWinnerId(winner.id);
-        setScreen('result');
-      }
-      return next;
-    });
+      )
+    );
   };
+
+  // Wykrywanie zwycięzcy w efekcie reagującym na zmianę punktów —
+  // wyodrębnione z updatera, żeby uniknąć podwójnego wywołania w StrictMode
+  // i zapewnić deterministyczne wyłonienie pierwszego, który przekroczył próg.
+  useEffect(() => {
+    if (screen !== 'play') return;
+    if (settings.winScore <= 0) return;
+    const winner = players.find((p) => p.score >= settings.winScore);
+    if (winner) {
+      setWinnerId(winner.id);
+      setScreen('result');
+    }
+  }, [players, screen, settings.winScore]);
 
   const finishGame = () => {
     const sorted = [...players].sort((a, b) => b.score - a.score);

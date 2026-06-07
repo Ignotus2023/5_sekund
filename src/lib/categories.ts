@@ -35,9 +35,8 @@ export const CATEGORIES: CategoryMeta[] = [
   { key: 'bajki',     label: 'Bajki',      emoji: '🧚' },
 ];
 
-export const CATEGORY_KEYS = CATEGORIES.map((c) => c.key);
+export const CATEGORY_KEYS: CategoryKey[] = CATEGORIES.map((c) => c.key);
 
-export const CATEGORY_BY_KEY: Record<CategoryKey, CategoryMeta> = CATEGORIES.reduce(
-  (acc, c) => ({ ...acc, [c.key]: c }),
-  {} as Record<CategoryKey, CategoryMeta>
-);
+export const CATEGORY_BY_KEY: Record<CategoryKey, CategoryMeta> = Object.fromEntries(
+  CATEGORIES.map((c) => [c.key, c]),
+) as Record<CategoryKey, CategoryMeta>;

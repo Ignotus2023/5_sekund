@@ -760,14 +760,14 @@ export function countByTier(): Record<Tier, number> {
   return out as Record<Tier, number>;
 }
 
-export function countByCategoryAndTier(): Record<string, Record<Tier, number>> {
-  const result: Record<string, Record<Tier, number>> = {};
+export function countByCategoryAndTier(): Record<CategoryKey, Record<Tier, number>> {
+  const result: Partial<Record<CategoryKey, Record<Tier, number>>> = {};
   (Object.keys(PROMPTS) as Tier[]).forEach((tier) => {
     PROMPTS[tier].forEach((p) => {
-      const cat = p.category || 'codzienne';
+      const cat = p.category;
       if (!result[cat]) result[cat] = {} as Record<Tier, number>;
-      result[cat][tier] = (result[cat][tier] || 0) + 1;
+      result[cat]![tier] = (result[cat]![tier] || 0) + 1;
     });
   });
-  return result;
+  return result as Record<CategoryKey, Record<Tier, number>>;
 }

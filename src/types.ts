@@ -28,7 +28,7 @@ export interface TimeSettings {
 
 export interface GameSettings {
   time: TimeSettings;
-  winScore: number;     // 0 = swobodny tryb
+  winScore: number;     // 0 = tryb swobodny
   speechRate: number;   // 0.5 - 1.5
   muted: boolean;
   selectedCategories: CategoryKey[]; // pusta lista = wszystkie
@@ -36,15 +36,4 @@ export interface GameSettings {
 
 export type GameScreen = 'setup' | 'play' | 'result';
 
-export type TurnPhase = 'ready' | 'running' | 'judging' | 'paused';
-
-export interface GameState {
-  screen: GameScreen;
-  players: Player[];
-  activePlayerIndex: number;
-  currentPrompt: Prompt | null;
-  phase: TurnPhase;
-  usedPromptIds: Record<Tier, string[]>;
-  winnerId: string | null;
-  roundNumber: number;
-}
+export type Phase = 'handoff' | 'ready' | 'running' | 'judged' | 'paused';

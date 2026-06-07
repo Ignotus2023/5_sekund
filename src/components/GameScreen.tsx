@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type { GameSettings, Player, Prompt, Tier } from '../types';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { GameSettings, Phase, Player, Prompt, Tier } from '../types';
 import { CountdownRing } from './CountdownRing';
 import { ScoreBoard } from './ScoreBoard';
 import { tierOf, TIER_LABEL } from '../lib/tier';
@@ -10,6 +10,10 @@ import { useTimer } from '../hooks/useTimer';
 import { useAudio } from '../hooks/useAudio';
 import { useSpeech } from '../hooks/useSpeech';
 
+// Czasówki — wyciągnięte ze "magicznych" wartości w kodzie.
+const SPEAK_DELAY_MS = 250;
+const AUTO_START_AFTER_TTS_MS = 300;
+
 interface Props {
   players: Player[];
   settings: GameSettings;
@@ -18,15 +22,17 @@ interface Props {
   onExit: () => void;
 }
 
-type Phase = 'handoff' | 'ready' | 'running' | 'judged' | 'paused';
-
 interface UsedMap {
   [tier: string]: string[];
 }
 
 export function GameScreen({ players, settings, onScore, onFinish, onExit }: Props) {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [used, setUsed] = useState<UsedMap>({});
+  // Pula użytych haseł żyje tylko w trakcie partii i nie ma UI, który by ją
+  // czytał — trzymamy w refie, dzięki czemu unikamy wyścigu, w którym
+  // funkcyjny setUsed czytałby starą wartość, gdy losowanie i zapis dzieją
+  // się w jednym takcie eventu.
+  const usedRef = useRef<UsedMap>({});
   const [currentPrompt, setCurrentPrompt] = useState<Prompt | null>(null);
   const [phase, setPhase] = useState<Phase>('handoff');
 
@@ -34,6 +40,12 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
   // widział aktualną fazę i ID hasła (a nie wartości z momentu wywołania speak()).
   const phaseRef = useRef<Phase>('handoff');
   const currentPromptIdRef = useRef<string | null>(null);
+  // Guard przeciw podwójnemu osądzeniu (np. double-tap "Zaliczone").
+  const judgingRef = useRef(false);
+  // Trzymamy ID timeoutu poprzedzającego speak() — czyścimy go w cancelSpeech,
+  // żeby skip/start w trakcie 250 ms okienka nie wystrzelił starego hasła.
+  const pendingSpeakTimeoutRef = useRef<number | null>(null);
+
   useEffect(() => {
     phaseRef.current = phase;
   }, [phase]);
@@ -42,67 +54,71 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
   }, [currentPrompt]);
 
   const { play } = useAudio(settings.muted);
-  const { speak, cancel: cancelSpeech, available: ttsAvailable } = useSpeech({
+  const { speak, cancel: rawCancelSpeech, available: ttsAvailable } = useSpeech({
     rate: settings.speechRate,
     muted: settings.muted,
   });
 
-  const activePlayer = players[activeIndex];
-  const activeTier: Tier = useMemo(() => tierOf(activePlayer.age), [activePlayer]);
+  // Cancel także anuluje pending speak-timeout — odporne na szybkie sekwencje
+  // newPrompt → skip → newPrompt, gdzie stare hasło zdążyłoby się zacząć czytać.
+  const cancelSpeech = useCallback(() => {
+    if (pendingSpeakTimeoutRef.current != null) {
+      clearTimeout(pendingSpeakTimeoutRef.current);
+      pendingSpeakTimeoutRef.current = null;
+    }
+    rawCancelSpeech();
+  }, [rawCancelSpeech]);
+
+  // Defensywny dostęp do aktywnego gracza — gdyby skład graczy się zmienił
+  // poza grą (np. pusty localStorage), nie wywalamy całego ekranu.
+  const safeIndex = players.length > 0 ? activeIndex % players.length : 0;
+  const activePlayer = players[safeIndex];
+
+  const activeTier: Tier = useMemo(
+    () => (activePlayer ? tierOf(activePlayer.age) : '11-12'),
+    [activePlayer],
+  );
   const turnSeconds = useMemo(
     () =>
       settings.time.baseSeconds +
       (settings.time.handicapEnabled ? settings.time.bonusByTier[activeTier] : 0),
-    [settings, activeTier]
+    [
+      settings.time.baseSeconds,
+      settings.time.handicapEnabled,
+      settings.time.bonusByTier,
+      activeTier,
+    ],
   );
 
-  const drawPrompt = (tier: Tier): Prompt | null => {
-    const fullPool = PROMPTS[tier];
-    const cats = settings.selectedCategories;
-    const inCategory =
-      cats.length === 0 ? fullPool : fullPool.filter((p) => cats.includes(p.category));
-    // Jesli wybrane kategorie nie maja zadnego hasla na tym poziomie - fallback do calej puli
-    const pool = inCategory.length > 0 ? inCategory : fullPool;
-    const usedIds = used[tier] ?? [];
-    let available = pool.filter((p) => !usedIds.includes(p.id));
-    if (available.length === 0) {
-      // wyczerpana pula - reset
-      setUsed((u) => ({ ...u, [tier]: [] }));
-      available = pool;
-    }
-    return pickRandom(available);
-  };
+  // Losowanie hasła z synchronicznym zapisem do refa. Set zamiast
+  // Array.includes daje O(1) lookup zamiast O(n).
+  const drawPrompt = useCallback(
+    (tier: Tier): Prompt | null => {
+      const fullPool = PROMPTS[tier];
+      const cats = settings.selectedCategories;
+      const inCategory =
+        cats.length === 0
+          ? fullPool
+          : fullPool.filter((p) => cats.includes(p.category));
+      const pool = inCategory.length > 0 ? inCategory : fullPool;
 
-  const newPrompt = () => {
-    const prompt = drawPrompt(activeTier);
-    setCurrentPrompt(prompt);
-    setPhase('ready');
-    timer.stop();
-    if (prompt) {
-      setUsed((u) => ({ ...u, [activeTier]: [...(u[activeTier] ?? []), prompt.id] }));
-      const promptId = prompt.id;
-      // Auto-czytaj nowe haslo, a po przeczytaniu sam wystartuj odliczanie.
-      // Jesli TTS niedostepny lub wyciszony — nie autostartujemy, grajacy klika "Start".
-      setTimeout(() => {
-        speak(prompt.text, {
-          onEnd: () => {
-            if (!ttsAvailable) return;
-            if (currentPromptIdRef.current !== promptId) return;
-            if (phaseRef.current !== 'ready') return;
-            // Krotka chwila zanim startuje timer ("gotowy... start!")
-            window.setTimeout(() => {
-              if (
-                currentPromptIdRef.current === promptId &&
-                phaseRef.current === 'ready'
-              ) {
-                startTimer();
-              }
-            }, 300);
-          },
-        });
-      }, 250);
-    }
-  };
+      const usedSet = new Set(usedRef.current[tier] ?? []);
+      let available = pool.filter((p) => !usedSet.has(p.id));
+      let cleared = false;
+      if (available.length === 0) {
+        available = pool;
+        cleared = true;
+      }
+      const picked = pickRandom(available);
+      if (!picked) return null;
+      usedRef.current = {
+        ...usedRef.current,
+        [tier]: cleared ? [picked.id] : [...(usedRef.current[tier] ?? []), picked.id],
+      };
+      return picked;
+    },
+    [settings.selectedCategories],
+  );
 
   const timer = useTimer({
     onTick: (left) => {
@@ -114,54 +130,94 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
     },
   });
 
-  // Na początku każdej tury (start gry oraz po każdej zmianie aktywnego gracza)
-  // pokaż panel "Teraz: <gracz>" i poczekaj na jego potwierdzenie. Dopiero wtedy
-  // wylosuj i przeczytaj hasło — dzięki temu telefon można podać następnej osobie.
+  // Startuje odliczanie. Używa currentPromptIdRef (świeży po commit Reacta),
+  // bo wywoływana jest m.in. z onEnd TTS z domknięcia sprzed ustawienia hasła.
+  const startTimer = useCallback(() => {
+    if (!currentPromptIdRef.current) return;
+    cancelSpeech();
+    setPhase('running');
+    timer.start(turnSeconds);
+  }, [cancelSpeech, timer, turnSeconds]);
+
+  const newPrompt = useCallback(() => {
+    const prompt = drawPrompt(activeTier);
+    setCurrentPrompt(prompt);
+    setPhase('ready');
+    timer.stop();
+    cancelSpeech();
+    judgingRef.current = false;
+    if (!prompt) return;
+    const promptId = prompt.id;
+
+    pendingSpeakTimeoutRef.current = window.setTimeout(() => {
+      pendingSpeakTimeoutRef.current = null;
+      speak(prompt.text, {
+        onEnd: () => {
+          if (!ttsAvailable) return;
+          if (currentPromptIdRef.current !== promptId) return;
+          if (phaseRef.current !== 'ready') return;
+          window.setTimeout(() => {
+            if (
+              currentPromptIdRef.current === promptId &&
+              phaseRef.current === 'ready'
+            ) {
+              startTimer();
+            }
+          }, AUTO_START_AFTER_TTS_MS);
+        },
+      });
+    }, SPEAK_DELAY_MS);
+  }, [activeTier, cancelSpeech, drawPrompt, speak, startTimer, timer, ttsAvailable]);
+
+  // Każda zmiana aktywnego gracza wraca do panelu handoff.
+  // timer.stop i cancelSpeech są stabilnymi useCallback-ami, więc dodajemy
+  // je do deps — zamiast wyłączać lintera.
   useEffect(() => {
     setPhase('handoff');
     setCurrentPrompt(null);
+    judgingRef.current = false;
     timer.stop();
     cancelSpeech();
     return () => {
       cancelSpeech();
       timer.stop();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIndex]);
+  }, [activeIndex, cancelSpeech, timer]);
 
-  const acceptTurn = () => {
-    if (phase !== 'handoff') return;
-    newPrompt();
-  };
-
-  // sprzątanie przy wyjściu
+  // Awaryjne sprzątanie przy unmount (np. zakończenie / wyjście).
   useEffect(() => {
     return () => {
       cancelSpeech();
     };
   }, [cancelSpeech]);
 
-  const startTimer = () => {
-    // Czytamy z refa, nie z domknięcia — auto-start wywoływany z callbacka
-    // przekazanego do speak() ma w closurze currentPrompt z renderu sprzed
-    // jego ustawienia, więc bezpośredni odczyt zwracałby null.
-    if (!currentPromptIdRef.current) return;
-    cancelSpeech();
-    setPhase('running');
-    timer.start(turnSeconds);
+  const acceptTurn = () => {
+    if (phase !== 'handoff') return;
+    newPrompt();
   };
 
   const pauseTimer = () => {
+    if (phase !== 'running') return;
     timer.pause();
     setPhase('paused');
   };
 
   const resumeTimer = () => {
+    if (phase !== 'paused') return;
     timer.resume();
     setPhase('running');
   };
 
+  const advance = () => {
+    if (players.length === 0) return;
+    setActiveIndex((i) => (i + 1) % players.length);
+  };
+
   const judge = (success: boolean) => {
+    // Guard przeciwko wielokrotnemu osądzeniu w jednym takcie (double-tap).
+    if (judgingRef.current) return;
+    if (phase !== 'running' && phase !== 'paused' && phase !== 'judged') return;
+    judgingRef.current = true;
     timer.stop();
     if (success) {
       play('point');
@@ -172,16 +228,10 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
     advance();
   };
 
-  const advance = () => {
-    // sprawdz wygranie
-    const updatedScore = activePlayer.score + 0; // App ma już aktualny score
-    void updatedScore;
-    // wygrana sprawdzana w App po onScore (przez efekt)
-    setActiveIndex((i) => (i + 1) % players.length);
-  };
-
   const skipPrompt = () => {
-    if (phase === 'running') return;
+    // Skip działa wyłącznie w fazie 'ready' — w 'paused'/'judged' porzucenie
+    // hasła bez sędziowania jest mylące dla prowadzącego.
+    if (phase !== 'ready') return;
     newPrompt();
   };
 
@@ -190,25 +240,61 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
   };
 
   const adjustScore = (delta: number) => {
+    if (!activePlayer) return;
     onScore(activePlayer.id, delta);
   };
 
+  // Zamykamy partię — najpierw ucinamy TTS i timer, dopiero potem oddajemy
+  // kontrolę rodzicowi (unmount zrobi to samo, ale tu jest deterministycznie).
+  const handleFinish = () => {
+    cancelSpeech();
+    timer.stop();
+    onFinish();
+  };
+  const handleExit = () => {
+    cancelSpeech();
+    timer.stop();
+    onExit();
+  };
+
+  if (!activePlayer) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-slate-600">Brak graczy.</p>
+        <button className="btn-primary mt-3" onClick={handleExit}>
+          Wróć do ustawień
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-full flex flex-col p-3 sm:p-5 gap-3 max-w-3xl mx-auto w-full animate-fade-in">
+    <main
+      className="min-h-full flex flex-col p-3 sm:p-5 gap-3 max-w-3xl mx-auto w-full animate-fade-in"
+      aria-label="Ekran rozgrywki"
+    >
       <header className="flex items-center gap-2">
-        <button className="btn-soft px-3" onClick={onExit} aria-label="Wyjdź">
-          ←
+        <button
+          className="btn-soft px-3 min-w-[48px]"
+          onClick={handleExit}
+          aria-label="Wyjdź do ustawień"
+        >
+          <span aria-hidden>←</span>
         </button>
         <div className="flex-1 overflow-x-auto">
-          <ScoreBoard players={players} activeId={activePlayer.id} winScore={settings.winScore} compact />
+          <ScoreBoard
+            players={players}
+            activeId={activePlayer.id}
+            winScore={settings.winScore}
+            compact
+          />
         </div>
         <button
-          className="btn-soft px-3"
-          onClick={onFinish}
+          className="btn-soft px-3 min-w-[48px]"
+          onClick={handleFinish}
           aria-label="Zakończ partię"
-          title="Zakończ partię"
         >
-          🏁
+          <span aria-hidden>🏁</span>
         </button>
       </header>
 
@@ -220,20 +306,21 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
             background: `linear-gradient(135deg, ${activePlayer.color}33, ${activePlayer.color}11)`,
             borderColor: activePlayer.color,
           }}
+          aria-labelledby="handoff-name"
         >
-          <div className="text-sm uppercase font-bold tracking-wide text-slate-600">
+          <div className="text-sm uppercase font-bold tracking-wide text-slate-700">
             Teraz kolej
           </div>
           <div className="text-8xl my-3" aria-hidden>
             {activePlayer.emoji}
           </div>
           <div
-            className="text-4xl sm:text-5xl font-black leading-tight"
-            style={{ color: activePlayer.color }}
+            id="handoff-name"
+            className="text-4xl sm:text-5xl font-black leading-tight text-slate-900"
           >
             {activePlayer.name}
           </div>
-          <div className="text-sm text-slate-600 mt-2">
+          <div className="text-sm text-slate-700 mt-2">
             poziom {TIER_LABEL[activeTier]} · ⏱ {turnSeconds} s
           </div>
           <button
@@ -241,9 +328,9 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
             onClick={acceptTurn}
             autoFocus
           >
-            Gotowy! ▶
+            Zaczynamy! ▶
           </button>
-          <div className="text-xs text-slate-500 mt-4 max-w-xs">
+          <div className="text-xs text-slate-600 mt-4 max-w-xs">
             Po kliknięciu lektor przeczyta hasło i ruszy odliczanie.
           </div>
         </section>
@@ -256,77 +343,131 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
               borderColor: activePlayer.color,
             }}
           >
-            <div className="text-sm uppercase font-bold tracking-wide text-slate-600">Kolej</div>
-            <div className="text-2xl sm:text-3xl font-black flex items-center justify-center gap-2 mt-1">
-              <span className="text-3xl">{activePlayer.emoji}</span>
-              <span style={{ color: activePlayer.color }}>{activePlayer.name}</span>
+            <div className="text-sm uppercase font-bold tracking-wide text-slate-700">
+              Kolej
             </div>
-            <div className="text-xs sm:text-sm text-slate-600 mt-1">
+            <div className="text-2xl sm:text-3xl font-black flex items-center justify-center gap-2 mt-1 text-slate-900">
+              <span className="text-3xl" aria-hidden>
+                {activePlayer.emoji}
+              </span>
+              <span>{activePlayer.name}</span>
+            </div>
+            <div className="text-xs sm:text-sm text-slate-700 mt-1">
               poziom {TIER_LABEL[activeTier]} · ⏱ {turnSeconds} s
             </div>
           </div>
 
-          <section className="card flex-1 flex flex-col items-center justify-center text-center py-8 min-h-[180px]">
+          <section
+            className="card flex-1 flex flex-col items-center justify-center text-center py-8 min-h-[180px]"
+            aria-label="Hasło do odgadnięcia"
+          >
             {currentPrompt ? (
-              <div key={currentPrompt.id} className="animate-pop-in">
-                <div className="text-3xl sm:text-5xl font-black leading-tight px-2">
+              <div
+                key={currentPrompt.id}
+                className="animate-pop-in"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                <div className="text-3xl sm:text-5xl font-black leading-tight px-2 text-slate-900">
                   {currentPrompt.text}
                 </div>
-                {currentPrompt.category && CATEGORY_BY_KEY[currentPrompt.category] && (
-                  <div className="inline-flex items-center gap-1 mt-3 px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wide">
-                    <span>{CATEGORY_BY_KEY[currentPrompt.category].emoji}</span>
+                {CATEGORY_BY_KEY[currentPrompt.category] && (
+                  <div className="inline-flex items-center gap-1 mt-3 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold uppercase tracking-wide">
+                    <span aria-hidden>{CATEGORY_BY_KEY[currentPrompt.category].emoji}</span>
                     <span>{CATEGORY_BY_KEY[currentPrompt.category].label}</span>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="text-slate-500">Brak haseł.</div>
+              <div className="text-slate-600">Brak haseł.</div>
             )}
             {!ttsAvailable && (
-              <div className="mt-3 text-xs text-amber-700 bg-amber-100 rounded-lg px-2 py-1">
-                Lektor pl-PL niedostępny na tym urządzeniu.
+              <div
+                className="mt-3 text-xs font-bold text-amber-800 bg-amber-100 rounded-lg px-2 py-1"
+                role="note"
+              >
+                Lektor pl-PL niedostępny — przeczytaj hasło sam(a).
               </div>
             )}
           </section>
 
-          <section className="flex justify-center">
+          <section className="flex justify-center" aria-label="Odliczanie">
             <CountdownRing
               remaining={phase === 'ready' ? turnSeconds : timer.remaining}
               duration={turnSeconds}
+              announce={phase === 'running'}
             />
           </section>
 
+          {phase === 'judged' && (
+            <div
+              className="text-center text-base font-bold text-rose-700 animate-fade-in"
+              role="status"
+              aria-live="assertive"
+            >
+              ⏱ Czas minął — czy zaliczył(a)?
+            </div>
+          )}
+
           <section className="flex flex-wrap gap-2 justify-center">
-            <button className="btn-ghost" onClick={readAgain}>🔊 Przeczytaj ponownie</button>
-            <button className="btn-ghost" onClick={skipPrompt} disabled={phase === 'running'}>
+            <button className="btn-ghost" onClick={readAgain} disabled={!currentPrompt}>
+              🔊 Przeczytaj ponownie
+            </button>
+            <button
+              className="btn-ghost"
+              onClick={skipPrompt}
+              disabled={phase !== 'ready'}
+              title={phase !== 'ready' ? 'Pomijać można tylko przed startem odliczania' : undefined}
+            >
               🔀 Pomiń hasło
             </button>
           </section>
 
           <section className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {phase === 'ready' && (
-              <button className="btn-primary col-span-full text-xl py-5" onClick={startTimer}>
+              <button
+                className="btn-primary col-span-full text-xl py-5"
+                onClick={startTimer}
+                disabled={!currentPrompt}
+              >
                 ▶ Start
               </button>
             )}
             {phase === 'running' && (
               <>
-                <button className="btn-soft sm:col-span-1" onClick={pauseTimer}>⏸ Pauza</button>
-                <button className="btn-success sm:col-span-1" onClick={() => judge(true)}>
+                <button className="btn-soft sm:col-span-1" onClick={pauseTimer}>
+                  ⏸ Pauza
+                </button>
+                <button
+                  className="btn-success sm:col-span-1"
+                  onClick={() => judge(true)}
+                >
                   ✅ Zaliczone
                 </button>
-                <button className="btn-danger sm:col-span-1" onClick={() => judge(false)}>
+                <button
+                  className="btn-danger sm:col-span-1"
+                  onClick={() => judge(false)}
+                >
                   ❌ Pudło
                 </button>
               </>
             )}
             {phase === 'paused' && (
               <>
-                <button className="btn-primary sm:col-span-1" onClick={resumeTimer}>▶ Wznów</button>
-                <button className="btn-success sm:col-span-1" onClick={() => judge(true)}>
+                <button className="btn-primary sm:col-span-1" onClick={resumeTimer}>
+                  ▶ Wznów
+                </button>
+                <button
+                  className="btn-success sm:col-span-1"
+                  onClick={() => judge(true)}
+                >
                   ✅ Zaliczone
                 </button>
-                <button className="btn-danger sm:col-span-1" onClick={() => judge(false)}>
+                <button
+                  className="btn-danger sm:col-span-1"
+                  onClick={() => judge(false)}
+                >
                   ❌ Pudło
                 </button>
               </>
@@ -336,28 +477,48 @@ export function GameScreen({ players, settings, onScore, onFinish, onExit }: Pro
                 <button className="btn-soft sm:col-span-1" onClick={advance}>
                   ➡ Następny
                 </button>
-                <button className="btn-success sm:col-span-1" onClick={() => judge(true)}>
+                <button
+                  className="btn-success sm:col-span-1"
+                  onClick={() => judge(true)}
+                >
                   ✅ Zaliczone
                 </button>
-                <button className="btn-danger sm:col-span-1" onClick={() => judge(false)}>
+                <button
+                  className="btn-danger sm:col-span-1"
+                  onClick={() => judge(false)}
+                >
                   ❌ Pudło
                 </button>
               </>
             )}
           </section>
 
-          <section className="card">
-            <div className="text-xs uppercase tracking-wide text-slate-500 mb-1">Korekta punktów</div>
+          <section className="card" aria-label="Korekta punktów">
+            <div className="text-xs uppercase tracking-wide text-slate-700 mb-1 font-bold">
+              Korekta punktów ({activePlayer.name})
+            </div>
             <div className="flex flex-wrap gap-2">
-              <button className="btn-soft" onClick={() => adjustScore(-1)}>−1 pkt</button>
-              <button className="btn-soft" onClick={() => adjustScore(+1)}>+1 pkt</button>
-              <div className="ml-auto self-center text-sm">
+              <button
+                className="btn-soft"
+                onClick={() => adjustScore(-1)}
+                aria-label={`Odejmij punkt graczowi ${activePlayer.name}`}
+              >
+                −1 pkt
+              </button>
+              <button
+                className="btn-soft"
+                onClick={() => adjustScore(+1)}
+                aria-label={`Dodaj punkt graczowi ${activePlayer.name}`}
+              >
+                +1 pkt
+              </button>
+              <div className="ml-auto self-center text-sm text-slate-900">
                 <span className="font-bold">{activePlayer.name}</span>: {activePlayer.score} pkt
               </div>
             </div>
           </section>
         </>
       )}
-    </div>
+    </main>
   );
 }

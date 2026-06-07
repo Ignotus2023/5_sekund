@@ -24,8 +24,14 @@ export function useSpeech({ rate, muted }: SpeechOptions) {
 
     const pickVoice = () => {
       const voices = synthRef.current?.getVoices() ?? [];
-      const pl = voices.find((v) => v.lang?.toLowerCase().startsWith('pl'));
-      voiceRef.current = pl ?? null;
+      const polish = voices.filter((v) => v.lang?.toLowerCase().startsWith('pl'));
+      // Deterministyczna selekcja: domyślny pl, potem alfabetycznie po nazwie.
+      polish.sort((a, b) => {
+        if (a.default !== b.default) return a.default ? -1 : 1;
+        return (a.name ?? '').localeCompare(b.name ?? '');
+      });
+      const pl = polish[0] ?? null;
+      voiceRef.current = pl;
       setAvailable(!!pl);
     };
 

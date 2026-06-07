@@ -79,8 +79,6 @@ export function useAudio(muted: boolean) {
   useEffect(() => {
     const prime = () => {
       ensure();
-      window.removeEventListener('pointerdown', prime);
-      window.removeEventListener('keydown', prime);
     };
     window.addEventListener('pointerdown', prime, { once: true });
     window.addEventListener('keydown', prime, { once: true });
