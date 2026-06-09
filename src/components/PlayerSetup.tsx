@@ -4,7 +4,7 @@ import { TIERS, TIER_LABEL, describeAge, tierOf, DEFAULT_BONUS } from '../lib/ti
 import { nextColor, nextEmoji, uid } from '../lib/utils';
 import { usePersistedState } from '../hooks/usePersistedState';
 import { CategorySelector } from './CategorySelector';
-import { EmojiPicker } from './EmojiPicker';
+import { SortablePlayerList } from './SortablePlayerList';
 
 interface Props {
   players: Player[];
@@ -55,14 +55,6 @@ export function PlayerSetup({
     };
     setPlayers([...players, newPlayer]);
     setName('');
-  };
-
-  const removePlayer = (id: string) => {
-    setPlayers(players.filter((p) => p.id !== id));
-  };
-
-  const updatePlayer = (id: string, patch: Partial<Player>) => {
-    setPlayers(players.map((p) => (p.id === id ? { ...p, ...patch } : p)));
   };
 
   const setBonus = (tier: Tier, value: number) => {
@@ -129,58 +121,13 @@ export function PlayerSetup({
               Dodaj przynajmniej jednego gracza, żeby zacząć.
             </p>
           )}
-          {players.map((p) => {
-            const takenEmojis = players.filter((x) => x.id !== p.id).map((x) => x.emoji);
-            return (
-              <div
-                key={p.id}
-                className="flex items-center gap-3 rounded-2xl p-3 border-2"
-                style={{ borderColor: p.color + '88', background: p.color + '11' }}
-              >
-                <EmojiPicker
-                  value={p.emoji}
-                  onChange={(emoji) => updatePlayer(p.id, { emoji })}
-                  taken={takenEmojis}
-                  color={p.color}
-                  label={`Zmień ikonkę gracza ${p.name}`}
-                />
-                <input
-                  className="input flex-1 min-w-0"
-                  value={p.name}
-                  maxLength={24}
-                  onChange={(e) => updatePlayer(p.id, { name: e.target.value })}
-                  aria-label={`Imię gracza ${p.name}`}
-                />
-                <select
-                  className="input w-28"
-                  value={p.age === 'dorosly' ? 'dorosly' : String(p.age)}
-                  onChange={(e) =>
-                    updatePlayer(p.id, {
-                      age:
-                        e.target.value === 'dorosly'
-                          ? 'dorosly'
-                          : Number(e.target.value),
-                    })
-                  }
-                  aria-label={`Wiek gracza ${p.name}`}
-                >
-                  {Array.from({ length: 12 }, (_, i) => i + 5).map((a) => (
-                    <option key={a} value={a}>
-                      {a} lat
-                    </option>
-                  ))}
-                  <option value="dorosly">Dorosły</option>
-                </select>
-                <button
-                  className="btn-soft px-3 min-w-[48px]"
-                  onClick={() => removePlayer(p.id)}
-                  aria-label={`Usuń gracza ${p.name}`}
-                >
-                  <span aria-hidden>✕</span>
-                </button>
-              </div>
-            );
-          })}
+          <SortablePlayerList players={players} setPlayers={setPlayers} />
+          {players.length >= 2 && (
+            <p className="text-xs text-slate-600 italic pl-1">
+              Wskazówka: przeciągnij <span aria-hidden>⠿</span> obok gracza,
+              by zmienić kolejność tur.
+            </p>
+          )}
         </div>
 
         <div className="border-t-2 border-slate-100 pt-3">
