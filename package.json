@@ -10,7 +10,11 @@
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "audit:prompts": "node scripts/audit-prompts.cjs",
+    "audit:licenses": "node scripts/audit-licenses.cjs",
+    "audit:outdated": "node scripts/audit-outdated.cjs",
+    "audit:all": "npm run audit:prompts && npm run audit:licenses && npm run audit:outdated"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -8,6 +8,7 @@ import { CategoriesSection } from './setup/CategoriesSection';
 import { HistorySection } from './setup/HistorySection';
 import { PreviewSection } from './setup/PreviewSection';
 import { PrivacySection } from './setup/PrivacySection';
+import { ErrorLogSection } from './setup/ErrorLogSection';
 
 interface Props {
   players: Player[];
@@ -22,7 +23,12 @@ interface Props {
 // Klucze localStorage używane przez aplikację — utrzymujemy w jednym miejscu,
 // żeby "Wyczyść wszystkie dane" mógł je celowo usunąć (nie ruszając danych
 // innych aplikacji z tego samego origin).
-const APP_STORAGE_KEYS = ['players', 'settings', 'used-prompt-texts'] as const;
+const APP_STORAGE_KEYS = [
+  'players',
+  'settings',
+  'used-prompt-texts',
+  'error-log',
+] as const;
 
 export function PlayerSetup({
   players,
@@ -105,6 +111,8 @@ export function PlayerSetup({
       />
 
       <HistorySection count={usedTexts.length} onReset={resetUsedTexts} />
+
+      <ErrorLogSection />
 
       <PreviewSection players={players} settings={settings} />
 
