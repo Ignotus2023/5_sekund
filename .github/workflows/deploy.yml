@@ -38,6 +38,11 @@ jobs:
       - name: Lint (TypeScript)
         run: npm run lint
 
+      # Testy jednostkowe Vitest — uruchamiane PRZED audytem i buildem, żeby
+      # szybko sygnalizować regresje w sanitize/tier/useTimer/useTurn.
+      - name: Tests (Vitest)
+        run: npm test
+
       # Audit zależności na produkcyjnym subset. `--omit=dev` żeby high w narzędziach
       # dev (które nie idą do bundla) nie blokowały deployu — krytyczne CVE w runtime
       # zablokują pipeline. Próg: `high` lub wyższe.

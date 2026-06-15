@@ -26,11 +26,28 @@ Rodzinna gra **„5 Sekund"** w wersji webowej (PWA). Gracz dostaje hasło typu 
 
 ```bash
 npm install
-npm run dev       # serwer deweloperski (http://localhost:5173)
-npm run lint      # tsc --noEmit (sprawdza typy)
-npm run build     # build produkcyjny do dist/
-npm run preview   # podgląd buildu produkcyjnego
+npm run dev          # serwer deweloperski (http://localhost:5173)
+npm run lint         # tsc --noEmit (sprawdza typy)
+npm test             # Vitest run (74 testy / ~3.5 s)
+npm run test:watch   # Vitest w trybie watch
+npm run test:coverage # raport pokrycia (html w coverage/)
+npm run build        # build produkcyjny do dist/
+npm run preview      # podgląd buildu produkcyjnego
 ```
+
+### Testy
+
+74 testy w 8 plikach pokrywają kluczowe obszary:
+- `src/lib/sanitize.test.ts` — sanitacja stanu z localStorage (RODO + CSS injection guard)
+- `src/lib/tier.test.ts` — mapowanie wiek→poziom (granice)
+- `src/lib/utils.test.ts` — uid, palety, pickRandom
+- `src/lib/categories.test.ts` — kompletność i unikalność kategorii
+- `src/hooks/useTimer.test.ts` — start/pause/resume/stop + onTick/onEnd z fake timers
+- `src/hooks/usePersistedState.test.ts` — hydracja, debounce, flush na pagehide
+- `src/hooks/useTurn.test.ts` — maszyna stanów rozgrywki + double-tap guard + persystencja
+- `src/components/CountdownRing.test.tsx` — a11y + render zaokrąglonej sekundy
+
+Pokrycie: **src/lib 98%**, **src/hooks 67%** (kluczowa logika), src/components 8% (komponenty UI testowane integracyjnie przez useTurn).
 
 ## Wdrożenie online — GitHub Pages
 
