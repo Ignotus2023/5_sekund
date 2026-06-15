@@ -4,50 +4,61 @@ Rodzinna gra **„5 Sekund"** w wersji webowej (PWA). Gracz dostaje hasło typu 
 
 ## Najważniejsze funkcje
 
-- Konfiguracja graczy (imię + wiek 5–16 lub „Dorosły"), automatyczne kolory i awatary.
-- 6 poziomów trudności mapowanych z wieku, ok. 80 polskich haseł na poziom (łącznie ~480, banki w bundle, działają offline).
-- 11 kategorii haseł (jedzenie, zwierzęta, kultura, geografia, sport, nauka, historia itd.) z możliwością wyboru, których ma używać gra.
-- Bonus czasowy (handicap) konfigurowany na ekranie startowym dla każdego poziomu wieku osobno; można wyłączyć.
+- Konfiguracja graczy: imię + wiek (5–16 lub „Dorosły"), wybór ikonki spośród 30 emoji, kolejność tur ustalana przez przeciąganie (drag‑and‑drop z obsługą myszki / dotyku / klawiatury).
+- **783 polskie hasła** w 6 poziomach trudności (5–6, 7–8, 9–10, 11–12, 13–16, dorośli) — średnio ~130 haseł na poziom. Bank w bundle, działa offline.
+- **16 kategorii** z możliwością wyboru: 🍎 Jedzenie, 🐾 Zwierzęta, 🏠 Codzienne, 🎭 Kultura, 🎵 Muzyka, 🎬 Filmy, 👥 Ludzie, 🌳 Przyroda, 📚 Szkoła, ⚽ Sport, 🗺️ Geografia, 🔬 Nauka, 🏛️ Historia, 🇵🇱 Polska, 🧚 Bajki, 🎄 Święta.
+- Historia wylosowanych haseł persystowana między partiami — hasło nie wraca w kolejnej rundzie, dopóki cała pula się nie wyczerpie. Licznik i przycisk czyszczenia w panelu startu.
+- Bonus czasowy (handicap) konfigurowany na ekranie startowym osobno dla każdego poziomu wieku.
 - Odliczanie z dużym pierścieniem SVG, tykaniem co sekundę, sygnałem końca i wibracją telefonu.
-- Lektor (Web Speech API) `pl-PL` z regulacją tempa i fallbackiem, jeśli głos jest niedostępny.
+- Lektor (Web Speech API) `pl-PL` z regulacją tempa, automatycznym czytaniem nowego hasła i auto‑startem odliczania po przeczytaniu. Fallback do tekstu, gdy głos jest niedostępny.
+- Panel przekazania tury („Teraz kolej: Julia") z przyciskiem „Zaciętamy!" — telefon można podać między graczami bez ryzyka uruchomienia timera na złym gracza.
 - Punktacja, korekta punktów, próg zwycięstwa (5/10/15 pkt lub tryb swobodny), ekran wyniku z konfetti.
-- Pamiętanie graczy i ustawień (localStorage).
-- PWA — manifest, service worker, instalacja na ekranie głównym, pełne działanie offline po pierwszym wczytaniu.
+- **RODO**: polityka prywatności w aplikacji (pełen modal), przycisk „Wyczyść wszystkie dane" usuwający trzy konkretne klucze localStorage.
+- **A11y**: pełne pokrycie `aria-live` / `role="status"` / `role="timer"` / `aria-current`, focus management, focus trap w pickerach, `prefers-reduced-motion`.
+- PWA — manifest, service worker (workbox), instalacja na ekranie głównym, pełne działanie offline po pierwszym wczytaniu.
+- Pamięć graczy, ustawień i historii haseł między sesjami (localStorage z debounce'em + flush na `pagehide` / `visibilitychange`).
 
 ## Wymagania
 
-- Node.js 18+ (zalecane 20+).
+- Node.js 20+ (Vite 8 wymaga `node >= 20.19`).
 
 ## Uruchomienie
 
 ```bash
 npm install
 npm run dev       # serwer deweloperski (http://localhost:5173)
-npm run build     # zbuduj wersję produkcyjną do dist/
-npm run preview   # podgląd zbudowanej wersji
+npm run lint      # tsc --noEmit (sprawdza typy)
+npm run build     # build produkcyjny do dist/
+npm run preview   # podgląd buildu produkcyjnego
 ```
 
 ## Wdrożenie online — GitHub Pages
 
-Repo zawiera workflow `.github/workflows/deploy.yml`, który po pushu na branch **`main`** automatycznie buduje aplikację i publikuje folder `dist/` na GitHub Pages.
+Repo zawiera workflow `.github/workflows/deploy.yml`, który po pushu na branch **`main`** automatycznie:
+1. wykonuje `npm run lint` (type-check),
+2. uruchamia `npm audit --omit=dev --audit-level=high` (security gate),
+3. builduje aplikację z `BASE_PATH=/<nazwa-repo>/`,
+4. publikuje folder `dist/` na GitHub Pages.
 
 Aby uruchomić deploy:
 
-1. W ustawieniach repo na GitHubie wejdź w **Settings → Pages** i w polu **Source** wybierz **GitHub Actions**.
-2. Zmerguj zmiany do brancha `main` (lub uruchom workflow ręcznie z zakładki **Actions → Deploy to GitHub Pages → Run workflow**).
-3. Po kilku minutach gra będzie dostępna pod adresem `https://<twoja-nazwa>.github.io/<nazwa-repo>/` (dla tego repo: `https://ignotus2023.github.io/5_sekund/`).
+1. W ustawieniach repo: **Settings → Pages → Source → GitHub Actions**.
+2. Zmerguj zmiany do brancha `main`.
+3. Po kilku minutach gra dostępna pod `https://<twoja-nazwa>.github.io/<nazwa-repo>/`.
 
-Workflow ustawia automatycznie `BASE_PATH=/<nazwa-repo>/`, dzięki czemu wszystkie ścieżki (assety, manifest PWA, service worker) generują się poprawnie.
+Akcje GitHub przypięte do SHA (z komentarzem wersji); auto‑aktualizacje przez Dependabot (`.github/dependabot.yml`).
 
 ## Wdrożenie statyczne (własny serwer, Vercel, Netlify…)
 
-`npm run build` produkuje statyczny folder `dist/`. Wystarczy go opublikować pod dowolnym serwerem HTTP (nginx, Caddy, Vercel, Netlify itp.).
+`npm run build` produkuje statyczny folder `dist/`. Wystarczy go opublikować pod dowolnym serwerem HTTP.
 
-Jeśli serwujesz nie z roota domeny tylko z podkatalogu (np. `https://example.com/gry/5sekund/`), uruchom build z odpowiednią zmienną:
+Jeśli serwujesz z podkatalogu (np. `https://example.com/gry/5sekund/`):
 
 ```bash
 BASE_PATH=/gry/5sekund/ npm run build
 ```
+
+`BASE_PATH` walidowane przy starcie buildu — musi pasować do `^/(?:[A-Za-z0-9_\-.]+/)*$`.
 
 Przykładowy blok nginx:
 
@@ -67,31 +78,82 @@ server {
 
 > **Uwaga:** pełne PWA (instalacja na ekranie głównym, service worker) działa tylko po HTTPS lub na `localhost`. Na zwykłym HTTP w sieci LAN service worker jest wyłączony, ale sama aplikacja nadal działa w przeglądarce.
 
+## Bezpieczeństwo
+
+- **Content Security Policy** w `<meta>` (strict): `default-src 'self'`, brak `'unsafe-eval'`, brak inline scriptów, `frame-ancestors 'none'`, `object-src 'none'`. Pełna konfiguracja w `index.html`. W dev tryb HMR wymaga luźniejszych ustawień — vite‑plugin `stripCspInDev` usuwa CSP w `vite dev`, zostawia w produkcji.
+- Dodatkowe nagłówki: `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`.
+- Sanitacja całego stanu z localStorage (`src/lib/sanitize.ts`) — regex na kolory, whitelista znaków w nazwach (strip C0/C1 controls, zero‑width, bidi override).
+- `noUncheckedIndexedAccess` w TS — kompilator wymusza guard‑y przy indeksowaniu tablic.
+- 0 znanych CVE (`npm audit --omit=dev`).
+
 ## Ikony PWA
 
-W `public/` znajdują się **placeholderowe** ikony `pwa-192x192.png` i `pwa-512x512.png` generowane przez `scripts/generate-icons.cjs`. Przed publikacją podmień je na właściwe (np. wygenerowane w https://realfavicongenerator.net).
+W `public/` są **placeholderowe** ikony `pwa-192x192.png` i `pwa-512x512.png` generowane przez `scripts/generate-icons.cjs`. Przed publikacją podmień na właściwe.
 
 ## Bank haseł
 
-Wszystkie hasła znajdują się w `src/data/prompts.ts`, podzielone na 6 poziomów (`5-6`, `7-8`, `9-10`, `11-12`, `13-16`, `dorosli`). Każde hasło ma przypisaną **kategorię** (typowaną w `src/lib/categories.ts`). Można je swobodnie rozszerzać — wystarczy dopisać kolejne wpisy do odpowiedniej tablicy w formacie `['Wymień 3 …', 'kategoria']`. Mapowanie wiek → poziom jest scentralizowane w `src/lib/tier.ts` (funkcja `tierOf`).
+Wszystkie hasła w `src/data/prompts.ts`, podzielone na 6 poziomów. Każde hasło ma typowaną kategorię (`src/lib/categories.ts`). Format wpisu: `['Wymień 3 …', 'kategoria']`. Mapowanie wiek → poziom: `src/lib/tier.ts` (`tierOf`).
 
-Na ekranie konfiguracji gracz/prowadzący może wybrać kategorie, z których aplikacja ma losować hasła. Jeśli wybór nie zawiera ani jednego hasła pasującego do wieku aktywnego gracza, aplikacja awaryjnie sięga po hasło spoza zaznaczonych — żeby gra nigdy się nie zacięła.
+Selekcja kategorii w UI: kafelki z licznikiem haseł per kategoria. `[]` = brak filtra = wszystkie kategorie. Konwencja: nie da się odznaczyć ostatniej kategorii kliknięciem w chip — wraca się do „wszystkich" świadomym kliknięciem przycisku.
 
 ## Struktura projektu
 
 ```
 src/
-  components/    PlayerSetup, GameScreen, CountdownRing, ScoreBoard, ResultScreen
-  data/          Bank haseł podzielony na poziomy
-  hooks/         useSpeech, useTimer, useAudio, usePersistedState
-  lib/           Mapowanie wiek → tier, utils, kolory
-  App.tsx, main.tsx, index.css, types.ts
+  App.tsx                       (root, ekrany: setup / play / result)
+  main.tsx                      (entry, React.StrictMode)
+  types.ts                      (Player, Prompt, GameSettings, Phase…)
+  index.css                     (Tailwind + komponenty + reduced-motion)
+  components/
+    PlayerSetup.tsx             (ekran konfiguracji)
+    GameScreen.tsx              (ekran rozgrywki — orkiestrator)
+    ResultScreen.tsx            (ranking + konfetti)
+    CountdownRing.tsx           (SVG pierścień + announce)
+    ScoreBoard.tsx              (lista punktów)
+    EmojiPicker.tsx             (popover z focus trap)
+    SortablePlayerList.tsx      (DnD-Kit lista graczy)
+    CategorySelector.tsx        (siatka kategorii)
+    PrivacyPolicy.tsx           (modal RODO)
+    setup/                      (sekcje ekranu startu)
+      PlayersSection.tsx
+      SettingsSection.tsx
+      HandicapSection.tsx
+      CategoriesSection.tsx
+      HistorySection.tsx
+      PreviewSection.tsx
+      PrivacySection.tsx
+    game/                       (podkomponenty rozgrywki)
+      HandoffPanel.tsx
+      PlayerBanner.tsx
+      PromptCard.tsx
+      TurnControls.tsx
+      ScoreAdjustPanel.tsx
+  hooks/
+    useTurn.ts                  (maszyna stanów + orkiestracja gry)
+    useTimer.ts                 (rAF + durationRef)
+    useSpeech.ts                (Web Speech API, gen counter)
+    useAudio.ts                 (Web Audio API procedural)
+    usePersistedState.ts        (localStorage + debounce + flush)
+  lib/
+    tier.ts                     (mapowanie wiek→Tier)
+    categories.ts               (16 kategorii)
+    sanitize.ts                 (walidacja stanu z localStorage)
+    utils.ts                    (uid, palety, pickRandom)
+  data/
+    prompts.ts                  (783 hasła w 6 tierach × 16 kategoriach)
 ```
 
-## Skróty klawiszowe (desktop)
+## Audyt
 
-- `Enter` na polu imienia — dodaje gracza.
+Pełny audyt aplikacji (bezpieczeństwo, łańcuch dostaw, jakość kodu, architektura, wydajność, testy, DevOps, RODO, dostępność) w pliku `AUDYT_5_sekund_2026-06-15.md`.
+
+## Skróty klawiszowe
+
+- `Enter` na polu „Imię nowego gracza" — dodaje gracza.
+- `Tab` / `Shift+Tab` w popoverze emoji — porusza wybór (focus trap).
+- `Escape` zamyka modal polityki prywatności i picker emoji.
+- Strzałki góra/dół na uchwycie ⠿ — zmiana kolejności graczy z klawiatury.
 
 ## Licencja
 
-Projekt prywatny / rodzinny.
+MIT — patrz `LICENSE`.

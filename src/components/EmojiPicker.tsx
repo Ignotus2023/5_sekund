@@ -37,6 +37,10 @@ export function EmojiPicker({
       if (popoverRef.current?.contains(target)) return;
       if (triggerRef.current?.contains(target)) return;
       setOpen(false);
+      // Outside click również przywraca focus na trigger — żeby klawiatura
+      // nie gubiła kontekstu po świadomym zamknięciu pickera kliknięciem
+      // poza nim. Spójne z zachowaniem Escape (linia 45).
+      requestAnimationFrame(() => triggerRef.current?.focus());
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {

@@ -11,7 +11,9 @@ import { PrivacySection } from './setup/PrivacySection';
 
 interface Props {
   players: Player[];
-  setPlayers: (players: Player[]) => void;
+  // Szerszy podpis (akceptuje funkcyjny update), żeby podkomponenty mogły
+  // używać `setPlayers(prev => ...)` bez deps na bieżącej tablicy.
+  setPlayers: (players: Player[] | ((prev: Player[]) => Player[])) => void;
   settings: GameSettings;
   setSettings: (s: GameSettings) => void;
   onStart: () => void;

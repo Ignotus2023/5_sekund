@@ -1,3 +1,4 @@
+import { memo, useCallback, useMemo } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -21,13 +22,13 @@ import { EmojiPicker } from './EmojiPicker';
 
 interface RowProps {
   player: Player;
-  takenEmojis: string[];
-  onChange: (patch: Partial<Player>) => void;
-  onRemove: () => void;
+  takenEmojis: readonly string[];
+  onChange: (id: string, patch: Partial<Player>) => void;
+  onRemove: (id: string) => void;
   dragDisabled: boolean;
 }
 
-function SortablePlayerRow({
+function SortablePlayerRowImpl({
   player,
   takenEmojis,
   onChange,
@@ -42,6 +43,30 @@ function SortablePlayerRow({
     transition,
     isDragging,
   } = useSortable({ id: player.id, disabled: dragDisabled });
+
+  // Stabilne handlery związane z tym jednym graczem — niezależne od listy
+  // (parent pasuje stabilne onChange/onRemove + id wiąże się tu).
+  const handleEmoji = useCallback(
+    (emoji: string) => onChange(player.id, { emoji }),
+    [onChange, player.id],
+  );
+  const handleName = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) =>
+      onChange(player.id, { name: e.target.value }),
+    [onChange, player.id],
+  );
+  const handleAge = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) =>
+      onChange(player.id, {
+        age:
+          e.target.value === 'dorosly' ? 'dorosly' : Number(e.target.value),
+      }),
+    [onChange, player.id],
+  );
+  const handleRemove = useCallback(
+    () => onRemove(player.id),
+    [onRemove, player.id],
+  );
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -72,8 +97,8 @@ function SortablePlayerRow({
       </button>
       <EmojiPicker
         value={player.emoji}
-        onChange={(emoji) => onChange({ emoji })}
-        taken={takenEmojis}
+        onChange={handleEmoji}
+        taken={takenEmojis as string[]}
         color={player.color}
         label={`Zmień ikonkę gracza ${player.name}`}
       />
@@ -81,18 +106,13 @@ function SortablePlayerRow({
         className="input flex-1 min-w-0"
         value={player.name}
         maxLength={24}
-        onChange={(e) => onChange({ name: e.target.value })}
+        onChange={handleName}
         aria-label={`Imię gracza ${player.name}`}
       />
       <select
         className="input w-24 sm:w-28"
         value={player.age === 'dorosly' ? 'dorosly' : String(player.age)}
-        onChange={(e) =>
-          onChange({
-            age:
-              e.target.value === 'dorosly' ? 'dorosly' : Number(e.target.value),
-          })
-        }
+        onChange={handleAge}
         aria-label={`Wiek gracza ${player.name}`}
       >
         {Array.from({ length: 12 }, (_, i) => i + 5).map((a) => (
@@ -104,7 +124,7 @@ function SortablePlayerRow({
       </select>
       <button
         className="btn-soft px-3 min-w-[48px]"
-        onClick={onRemove}
+        onClick={handleRemove}
         aria-label={`Usuń gracza ${player.name}`}
       >
         <span aria-hidden>✕</span>
@@ -113,9 +133,16 @@ function SortablePlayerRow({
   );
 }
 
+// React.memo z domyślnym shallow-compare — ze stabilnymi callbackami z parenta
+// i `takenEmojis` z useMemo, re-render rzędu zachodzi tylko gdy zmienia się
+// dany gracz, jego dragDisabled lub jego lista zajętych emoji.
+const SortablePlayerRow = memo(SortablePlayerRowImpl);
+
 interface ListProps {
   players: Player[];
-  setPlayers: (players: Player[]) => void;
+  setPlayers: (
+    players: Player[] | ((prev: Player[]) => Player[]),
+  ) => void;
 }
 
 export function SortablePlayerList({ players, setPlayers }: ListProps) {
@@ -133,16 +160,53 @@ export function SortablePlayerList({ players, setPlayers }: ListProps) {
     }),
   );
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const oldIndex = players.findIndex((p) => p.id === active.id);
-    const newIndex = players.findIndex((p) => p.id === over.id);
-    if (oldIndex < 0 || newIndex < 0) return;
-    setPlayers(arrayMove(players, oldIndex, newIndex));
-  };
+  // Stabilne handlery na poziomie listy — używają funkcyjnego setState, więc
+  // nie muszą trzymać `players` w deps. Dzięki temu się nie rekreują na
+  // każdym renderze parent'a — React.memo na wierszach pomija re-render
+  // wierszy, których dane się nie zmieniły.
+  const handleChange = useCallback(
+    (id: string, patch: Partial<Player>) => {
+      setPlayers((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+      );
+    },
+    [setPlayers],
+  );
+  const handleRemove = useCallback(
+    (id: string) => {
+      setPlayers((prev) => prev.filter((p) => p.id !== id));
+    },
+    [setPlayers],
+  );
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+      setPlayers((prev) => {
+        const oldIndex = prev.findIndex((p) => p.id === active.id);
+        const newIndex = prev.findIndex((p) => p.id === over.id);
+        if (oldIndex < 0 || newIndex < 0) return prev;
+        return arrayMove(prev, oldIndex, newIndex);
+      });
+    },
+    [setPlayers],
+  );
+
+  // Per-player lista zajętych emoji — useMemo na cały słownik raz, zamiast
+  // filter() przy każdym wierszu.
+  const takenByPlayerId = useMemo(() => {
+    const all = players.map((p) => p.emoji);
+    const map: Record<string, readonly string[]> = {};
+    players.forEach((p, idx) => {
+      map[p.id] = [...all.slice(0, idx), ...all.slice(idx + 1)];
+    });
+    return map;
+  }, [players]);
 
   const dragDisabled = players.length < 2;
+  const itemIds = useMemo(() => players.map((p) => p.id), [players]);
+  const FALLBACK_TAKEN: readonly string[] = [];
 
   return (
     <DndContext
@@ -150,31 +214,17 @@ export function SortablePlayerList({ players, setPlayers }: ListProps) {
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      <SortableContext
-        items={players.map((p) => p.id)}
-        strategy={verticalListSortingStrategy}
-      >
-        {players.map((p) => {
-          const takenEmojis = players
-            .filter((x) => x.id !== p.id)
-            .map((x) => x.emoji);
-          return (
-            <SortablePlayerRow
-              key={p.id}
-              player={p}
-              takenEmojis={takenEmojis}
-              onChange={(patch) =>
-                setPlayers(
-                  players.map((x) => (x.id === p.id ? { ...x, ...patch } : x)),
-                )
-              }
-              onRemove={() =>
-                setPlayers(players.filter((x) => x.id !== p.id))
-              }
-              dragDisabled={dragDisabled}
-            />
-          );
-        })}
+      <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+        {players.map((p) => (
+          <SortablePlayerRow
+            key={p.id}
+            player={p}
+            takenEmojis={takenByPlayerId[p.id] ?? FALLBACK_TAKEN}
+            onChange={handleChange}
+            onRemove={handleRemove}
+            dragDisabled={dragDisabled}
+          />
+        ))}
       </SortableContext>
     </DndContext>
   );

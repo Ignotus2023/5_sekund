@@ -5,7 +5,9 @@ import { SortablePlayerList } from '../SortablePlayerList';
 
 interface Props {
   players: Player[];
-  setPlayers: (players: Player[]) => void;
+  setPlayers: (
+    players: Player[] | ((prev: Player[]) => Player[]),
+  ) => void;
 }
 
 export function PlayersSection({ players, setPlayers }: Props) {
@@ -17,17 +19,17 @@ export function PlayersSection({ players, setPlayers }: Props) {
   const addPlayer = () => {
     const trimmed = name.trim().slice(0, 24);
     if (!trimmed) return;
-    const usedColors = players.map((p) => p.color);
-    const usedEmojis = players.map((p) => p.emoji);
-    const newPlayer: Player = {
-      id: uid(),
-      name: trimmed,
-      age,
-      score: 0,
-      color: nextColor(usedColors),
-      emoji: nextEmoji(usedEmojis),
-    };
-    setPlayers([...players, newPlayer]);
+    setPlayers((prev) => {
+      const newPlayer: Player = {
+        id: uid(),
+        name: trimmed,
+        age,
+        score: 0,
+        color: nextColor(prev.map((p) => p.color)),
+        emoji: nextEmoji(prev.map((p) => p.emoji)),
+      };
+      return [...prev, newPlayer];
+    });
     setName('');
   };
 
