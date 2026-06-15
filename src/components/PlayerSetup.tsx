@@ -1,11 +1,16 @@
-import { useId, useState } from 'react';
+import { Suspense, lazy, useId, useState } from 'react';
 import type { Player, GameSettings, Tier } from '../types';
 import { TIERS, TIER_LABEL, describeAge, tierOf, DEFAULT_BONUS } from '../lib/tier';
 import { nextColor, nextEmoji, uid } from '../lib/utils';
 import { usePersistedState } from '../hooks/usePersistedState';
-import { CategorySelector } from './CategorySelector';
 import { SortablePlayerList } from './SortablePlayerList';
 import { PrivacyPolicy } from './PrivacyPolicy';
+
+// Lazy: CategorySelector ciągnie cały bank haseł (countByCategoryAndTier).
+// Ładuje się dopiero gdy użytkownik rozwinie akordeon „Kategorie haseł".
+const CategorySelector = lazy(() =>
+  import('./CategorySelector').then((m) => ({ default: m.CategorySelector })),
+);
 
 // Klucze localStorage używane przez aplikację — utrzymujemy w jednym miejscu,
 // żeby „Wyczyść wszystkie dane" mógł je celowo usunąć (nie ruszając danych
@@ -404,12 +409,18 @@ export function PlayerSetup({
         </button>
         {categoriesOpen && (
           <div className="mt-3">
-            <CategorySelector
-              selected={settings.selectedCategories}
-              onChange={(cats) =>
-                setSettings({ ...settings, selectedCategories: cats })
+            <Suspense
+              fallback={
+                <p className="text-sm text-slate-600">Ładuję kategorie…</p>
               }
-            />
+            >
+              <CategorySelector
+                selected={settings.selectedCategories}
+                onChange={(cats) =>
+                  setSettings({ ...settings, selectedCategories: cats })
+                }
+              />
+            </Suspense>
           </div>
         )}
       </section>

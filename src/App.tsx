@@ -1,11 +1,35 @@
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import type { GameScreen as GameScreenName, GameSettings, Player } from './types';
 import { DEFAULT_BONUS } from './lib/tier';
 import { sanitizePlayers, sanitizeSettings } from './lib/sanitize';
 import { usePersistedState } from './hooks/usePersistedState';
 import { PlayerSetup } from './components/PlayerSetup';
-import { GameScreen } from './components/GameScreen';
-import { ResultScreen } from './components/ResultScreen';
+
+// GameScreen ciągnie cały bank haseł (prompts.ts ~12 kB gz) + canvas-confetti
+// (ResultScreen) — lazy-loadujemy oba, żeby ekran startowy odpalał się
+// szybciej. Vite/Rollup automatycznie wydzieli te chunky.
+const GameScreen = lazy(() =>
+  import('./components/GameScreen').then((m) => ({ default: m.GameScreen })),
+);
+const ResultScreen = lazy(() =>
+  import('./components/ResultScreen').then((m) => ({ default: m.ResultScreen })),
+);
+
+function ScreenFallback({ label }: { label: string }) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="min-h-[60vh] flex flex-col items-center justify-center text-slate-700 gap-3"
+    >
+      <div
+        className="w-12 h-12 rounded-full border-4 border-brand-200 border-t-brand-700 animate-spin"
+        aria-hidden
+      />
+      <p className="text-sm font-bold">{label}</p>
+    </div>
+  );
+}
 
 const DEFAULT_SETTINGS: GameSettings = {
   time: {
@@ -100,21 +124,25 @@ export default function App() {
         />
       )}
       {screen === 'play' && (
-        <GameScreen
-          players={players}
-          settings={settings}
-          onScore={handleScore}
-          onFinish={finishGame}
-          onExit={newGame}
-        />
+        <Suspense fallback={<ScreenFallback label="Ładuję grę…" />}>
+          <GameScreen
+            players={players}
+            settings={settings}
+            onScore={handleScore}
+            onFinish={finishGame}
+            onExit={newGame}
+          />
+        </Suspense>
       )}
       {screen === 'result' && (
-        <ResultScreen
-          players={players}
-          winnerId={winnerId}
-          onPlayAgain={playAgain}
-          onNewGame={newGame}
-        />
+        <Suspense fallback={<ScreenFallback label="Ładuję wynik…" />}>
+          <ResultScreen
+            players={players}
+            winnerId={winnerId}
+            onPlayAgain={playAgain}
+            onNewGame={newGame}
+          />
+        </Suspense>
       )}
     </div>
   );
