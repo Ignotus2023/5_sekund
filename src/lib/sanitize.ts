@@ -25,11 +25,38 @@ function sanitizeAge(value: unknown): number | 'dorosly' {
   return 8;
 }
 
+// Znaki niewidoczne / niebezpieczne usuwane z imion:
+//  - U+0000..U+001F  (C0 controls — NUL, BEL, BS itd.)
+//  - U+007F..U+009F  (DEL + C1 controls)
+//  - U+200B..U+200F  (zero-width space/joiner/non-joiner + bidi marks)
+//  - U+202A..U+202E  (bidi override — atak typu Trojan Source)
+//  - U+2060..U+2064  (word joiner + invisible operators)
+//  - U+FEFF          (BOM / zero-width no-break space)
+// Polskie litery, RTL (np. arabski), emoji i znaki interpunkcyjne przechodzą.
+const FORBIDDEN_CHARS = new RegExp(
+  '[' +
+    '\u0000-\u001F' +
+    '\u007F-\u009F' +
+    '\u200B-\u200F' +
+    '\u202A-\u202E' +
+    '\u2060-\u2064' +
+    '\uFEFF' +
+    ']',
+  'g',
+);
+
 function sanitizeString(value: unknown, fallback: string, maxLen = 24): string {
   if (typeof value !== 'string') return fallback;
-  const trimmed = value.trim();
-  if (!trimmed) return fallback;
-  return trimmed.slice(0, maxLen);
+  // 1. Usuń znaki kontrolne i zero-width (mogą wpłynąć na layout / czytniki).
+  // 2. Zwiń ciągi białych znaków do pojedynczej spacji.
+  // 3. Przytnij białe na brzegach.
+  const cleaned = value.replace(FORBIDDEN_CHARS, '').replace(/\s+/g, ' ').trim();
+  if (!cleaned) return fallback;
+  // Iteracja po code-pointach (zamiast .slice na code-units), żeby nie
+  // rozjechać emoji/surogatów w połowie znaku.
+  const codepoints = [...cleaned];
+  if (codepoints.length <= maxLen) return cleaned;
+  return codepoints.slice(0, maxLen).join('');
 }
 
 function sanitizeBonusByTier(value: unknown): Record<Tier, number> {

@@ -42,7 +42,7 @@ function CountdownRingImpl({ remaining, duration, announce = false }: Props) {
           ? `Pozostało ${wholeLeft} ${wholeLeft === 1 ? 'sekunda' : 'sekund'}`
           : `Czas tury: ${Math.ceil(safeDuration)} sekund`
       }
-      aria-live={announce ? 'off' : 'off'}
+      aria-live="off"
     >
       <svg viewBox="0 0 256 256" className="w-full h-full -rotate-90" aria-hidden>
         <circle

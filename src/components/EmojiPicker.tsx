@@ -52,9 +52,9 @@ export function EmojiPicker({
             'button[data-emoji]:not([disabled])',
           ) ?? [],
         );
-        if (buttons.length === 0) return;
         const first = buttons[0];
         const last = buttons[buttons.length - 1];
+        if (!first || !last) return;
         const active = document.activeElement as HTMLElement | null;
         if (e.shiftKey && active === first) {
           e.preventDefault();

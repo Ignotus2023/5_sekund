@@ -4,7 +4,26 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // Bazowa ścieżka — domyślnie '/' (dev/preview/własny serwer).
 // Na GitHub Pages: ustaw BASE_PATH=/5_sekund/ przy buildzie (robi to workflow w .github/workflows/deploy.yml).
-const base = process.env.BASE_PATH || '/';
+//
+// Walidacja: BASE_PATH musi pasować do bezpiecznego wzorca ścieżki URL —
+// zaczyna i kończy się ukośnikiem, zawiera tylko bezpieczne znaki. Chroni
+// przed wstrzyknięciem schematu `javascript:` lub bytami URL-encoded
+// w wartości zmiennej środowiska CI (np. po nadpisaniu workflow przez fork).
+const BASE_PATH_PATTERN = /^\/(?:[A-Za-z0-9_\-.]+\/)*$/;
+
+function resolveBase(): string {
+  const raw = process.env.BASE_PATH;
+  if (!raw || raw === '/') return '/';
+  if (!BASE_PATH_PATTERN.test(raw)) {
+    throw new Error(
+      `BASE_PATH musi być bezpieczną ścieżką typu /podkatalog/ ` +
+        `(regex ${BASE_PATH_PATTERN}). Otrzymano: ${JSON.stringify(raw)}`,
+    );
+  }
+  return raw;
+}
+
+const base = resolveBase();
 
 /**
  * W trybie dev usuwamy meta CSP z index.html, bo Vite HMR używa WebSocket

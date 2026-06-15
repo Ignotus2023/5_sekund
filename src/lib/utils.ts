@@ -8,6 +8,9 @@ export function uid(): string {
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 }
 
+// `as const` daje TS niestracający rozmiaru tuple — wtedy
+// `PLAYER_COLORS[i % PLAYER_COLORS.length]` zwraca typ konkretny zamiast
+// `string | undefined`. Ponadto zapobiega przypadkowemu mutowaniu palety.
 export const PLAYER_COLORS = [
   '#7c3aed', // violet
   '#0ea5e9', // sky
@@ -17,7 +20,7 @@ export const PLAYER_COLORS = [
   '#ec4899', // pink
   '#14b8a6', // teal
   '#8b5cf6', // purple
-];
+] as const;
 
 export const PLAYER_EMOJIS = [
   '🦊', '🐼', '🦁', '🐻', '🐯', '🐸',
@@ -25,19 +28,28 @@ export const PLAYER_EMOJIS = [
   '🐭', '🐹', '🐨', '🐷', '🐮', '🐔',
   '🐺', '🦝', '🦓', '🦒', '🐢', '🐳',
   '🐙', '🦋', '🐞', '🦖', '🐲', '🦔',
-];
+] as const;
 
-export function nextColor(usedColors: string[]): string {
+const FALLBACK_COLOR = '#7c3aed';
+const FALLBACK_EMOJI = '🦊';
+
+export function nextColor(usedColors: readonly string[]): string {
   const free = PLAYER_COLORS.find((c) => !usedColors.includes(c));
-  return free || PLAYER_COLORS[usedColors.length % PLAYER_COLORS.length];
+  if (free) return free;
+  return (
+    PLAYER_COLORS[usedColors.length % PLAYER_COLORS.length] ?? FALLBACK_COLOR
+  );
 }
 
-export function nextEmoji(usedEmojis: string[]): string {
+export function nextEmoji(usedEmojis: readonly string[]): string {
   const free = PLAYER_EMOJIS.find((e) => !usedEmojis.includes(e));
-  return free || PLAYER_EMOJIS[usedEmojis.length % PLAYER_EMOJIS.length];
+  if (free) return free;
+  return (
+    PLAYER_EMOJIS[usedEmojis.length % PLAYER_EMOJIS.length] ?? FALLBACK_EMOJI
+  );
 }
 
-export function pickRandom<T>(arr: T[]): T | null {
+export function pickRandom<T>(arr: readonly T[]): T | null {
   if (arr.length === 0) return null;
-  return arr[Math.floor(Math.random() * arr.length)];
+  return arr[Math.floor(Math.random() * arr.length)] ?? null;
 }

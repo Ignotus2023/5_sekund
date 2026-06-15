@@ -32,6 +32,18 @@ jobs:
       - name: Install
         run: npm ci
 
+      # Type-check przed buildem — szybki, ostry sygnał regresji TS-owej.
+      # `npm run build` też uruchamia tsc, ale wprost wywołane jasno komunikuje
+      # cel kroku w logach Actions.
+      - name: Lint (TypeScript)
+        run: npm run lint
+
+      # Audit zależności na produkcyjnym subset. `--omit=dev` żeby high w narzędziach
+      # dev (które nie idą do bundla) nie blokowały deployu — krytyczne CVE w runtime
+      # zablokują pipeline. Próg: `high` lub wyższe.
+      - name: Security audit (production deps)
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
