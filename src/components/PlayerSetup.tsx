@@ -5,6 +5,12 @@ import { nextColor, nextEmoji, uid } from '../lib/utils';
 import { usePersistedState } from '../hooks/usePersistedState';
 import { CategorySelector } from './CategorySelector';
 import { SortablePlayerList } from './SortablePlayerList';
+import { PrivacyPolicy } from './PrivacyPolicy';
+
+// Klucze localStorage używane przez aplikację — utrzymujemy w jednym miejscu,
+// żeby „Wyczyść wszystkie dane" mógł je celowo usunąć (nie ruszając danych
+// innych aplikacji z tego samego origin).
+const APP_STORAGE_KEYS = ['players', 'settings', 'used-prompt-texts'] as const;
 
 interface Props {
   players: Player[];
@@ -28,6 +34,7 @@ export function PlayerSetup({
   const [age, setAge] = useState<number | 'dorosly'>(8);
   const [handicapOpen, setHandicapOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
   const nameId = useId();
   const ageId = useId();
   const newNameId = useId();
@@ -91,6 +98,35 @@ export function PlayerSetup({
       return;
     }
     setUsedTexts([]);
+  };
+
+  // Twarde czyszczenie wszystkich danych aplikacji (RODO: art. 17, prawo do usunięcia).
+  // Usuwa tylko klucze należące do aplikacji — nie ruszamy localStorage innych aplikacji
+  // hostowanych pod tym samym originem (GitHub Pages współdzieli localStorage między
+  // wszystkimi `<username>.github.io/*`).
+  const eraseEverything = () => {
+    const playerCount = players.length;
+    const totalUsed = usedTexts.length;
+    if (
+      !confirm(
+        `⚠ UWAGA — to usunie WSZYSTKIE dane aplikacji:\n\n` +
+          `• ${playerCount} ${playerCount === 1 ? 'gracza' : 'graczy'}\n` +
+          `• ustawienia partii (czas, kategorie, próg zwycięstwa)\n` +
+          `• historię ${totalUsed} ${totalUsed === 1 ? 'wylosowanego hasła' : 'wylosowanych haseł'}\n\n` +
+          `Aplikacja przeładuje się ze stanem fabrycznym. Operacja jest nieodwracalna.\n\n` +
+          `Kontynuować?`,
+      )
+    ) {
+      return;
+    }
+    try {
+      APP_STORAGE_KEYS.forEach((k) => localStorage.removeItem(k));
+    } catch {
+      // ignore (localStorage może być wyłączone — i tak przeładujemy stronę)
+    }
+    // Pełne przeładowanie, żeby zaktualizowane stany hooków poszły od zera
+    // (uniknięcie podwójnej synchronizacji z localStorage).
+    window.location.reload();
   };
 
   const canStart = players.length >= 1;
@@ -445,6 +481,54 @@ export function PlayerSetup({
           ▶ Start gry
         </button>
       </div>
+
+      <section
+        className="card border-2 border-rose-200 bg-rose-50/60"
+        aria-labelledby="privacy-section-heading"
+      >
+        <h3
+          id="privacy-section-heading"
+          className="font-bold text-slate-900 text-sm uppercase mb-2"
+        >
+          🔒 Twoje dane i prywatność
+        </h3>
+        <p className="text-xs text-slate-700 mb-3 leading-relaxed">
+          Wszystkie dane (imiona graczy, wiek, ustawienia, historia haseł) są przechowywane
+          wyłącznie na Twoim urządzeniu i nigdzie nie są wysyłane. Możesz w każdej chwili
+          je przejrzeć, edytować lub usunąć.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setPrivacyOpen(true)}
+            className="btn-soft text-sm"
+          >
+            📄 Polityka prywatności
+          </button>
+          <button
+            type="button"
+            onClick={eraseEverything}
+            className="btn-danger text-sm"
+          >
+            🗑 Wyczyść wszystkie dane
+          </button>
+        </div>
+      </section>
+
+      <footer className="text-center text-xs text-slate-600 pt-1">
+        <p>
+          „5 Sekund" · rodzinna gra ·{' '}
+          <button
+            type="button"
+            onClick={() => setPrivacyOpen(true)}
+            className="underline hover:text-slate-900"
+          >
+            Polityka prywatności
+          </button>
+        </p>
+      </footer>
+
+      <PrivacyPolicy open={privacyOpen} onClose={() => setPrivacyOpen(false)} />
     </main>
   );
 }

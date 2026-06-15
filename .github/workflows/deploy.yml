@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - claude/blissful-faraday-4ZKkQ
   workflow_dispatch:
 
 permissions:
