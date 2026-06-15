@@ -1,4 +1,10 @@
 export function uid(): string {
+  // Preferujemy `crypto.randomUUID()` — dostępne we wszystkich nowoczesnych
+  // przeglądarkach (Chrome 92+, Safari 15.4+, Firefox 95+). Fallback dla
+  // środowisk bez Web Crypto (starsze przeglądarki, niektóre testy).
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
   return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
 }
 

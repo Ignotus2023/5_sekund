@@ -1,0 +1,45 @@
+version: 2
+
+updates:
+  # Akcje GitHub przypięte do SHA — Dependabot podbija SHA i komentarz wersji.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Warsaw
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+      include: scope
+    labels:
+      - dependencies
+      - ci
+
+  # Pakiety npm — grupujemy aktualizacje nie‑major, żeby nie zalewać repo
+  # 20 PR‑ami tygodniowo. Major bumps idą osobno (świadoma decyzja).
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Warsaw
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+      include: scope
+    labels:
+      - dependencies
+    groups:
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+    # Major bumps wymagają świadomej weryfikacji (vite 5→8 to nie żart).
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

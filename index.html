@@ -2,6 +2,25 @@
 <html lang="pl">
   <head>
     <meta charset="UTF-8" />
+    <!--
+      Content Security Policy — warstwa obronna prewencyjna.
+      • default-src 'self' — ramy referencyjne dla wszystkiego co nie wymienione niżej
+      • script-src 'self' — tylko własne skrypty (brak inline / eval)
+      • style-src 'self' 'unsafe-inline' fonts.googleapis.com — Tailwind + interpolowane
+        style={{}} w komponentach wymagają inline; fonty Google ładują CSS
+      • font-src fonts.gstatic.com — pliki czcionek Nunito
+      • img-src 'self' data: — ikony PWA + data: dla canvas-confetti
+      • connect-src 'self' — brak wywołań sieciowych poza precache
+      • worker-src 'self' — service worker workbox
+      • manifest-src 'self' — manifest.webmanifest
+      • base-uri 'self' — chroni przed nadpisaniem base
+      • form-action 'none' — brak formularzy z submitem
+      • frame-ancestors 'none' — anty-clickjacking (zastępuje X-Frame-Options)
+      • object-src 'none' — brak <object>/<embed>
+    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'none'; frame-ancestors 'none'; object-src 'none'" />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#7c3aed" />

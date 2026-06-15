@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -6,9 +6,31 @@ import { VitePWA } from 'vite-plugin-pwa';
 // Na GitHub Pages: ustaw BASE_PATH=/5_sekund/ przy buildzie (robi to workflow w .github/workflows/deploy.yml).
 const base = process.env.BASE_PATH || '/';
 
+/**
+ * W trybie dev usuwamy meta CSP z index.html, bo Vite HMR używa WebSocket
+ * i inline modułów, których strict CSP by nie przepuściło. W produkcji CSP
+ * zostaje nienaruszone.
+ */
+function stripCspInDev(): Plugin {
+  return {
+    name: 'strip-csp-in-dev',
+    transformIndexHtml: {
+      order: 'pre',
+      handler(html, ctx) {
+        if (!ctx.server) return html;
+        return html.replace(
+          /<meta http-equiv="Content-Security-Policy"[\s\S]*?\/>\s*/,
+          '<!-- CSP usunięte w trybie dev (HMR) -->\n    ',
+        );
+      },
+    },
+  };
+}
+
 export default defineConfig({
   base,
   plugins: [
+    stripCspInDev(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',
